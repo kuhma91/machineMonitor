@@ -33,7 +33,10 @@ class MachineManager:
         self.initializeUi()
 
     def storeWidget(self):
-        print('storeWidget')
+        self.nameField = self.ui.nameField
+        self.infoLayout = self.ui.infoLayout
+        self.endButton = self.ui.endButton
+        self.uiMenus = self.ui.uiMenus
 
     def fillUi(self):
         print('fillUi')
@@ -60,4 +63,4 @@ class MachineManager:
 
 if __name__ == "__main__":
     if not MAYA_ENV:
-        MachineMonitorMachineManager()
+        MachineManager()
