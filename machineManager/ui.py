@@ -7,14 +7,17 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
+import os
 
 # ==== third ==== #
 from PySide2 import QtWidgets
 from PySide2 import QtCore
+from PySide2.QtGui import QIcon
 
 # ==== local ===== #
-from library.general.stringLib import formatString
+from machineMonitor.library.general.stringLib import formatString
 from machineMonitor.machineManager.core import NEEDED_INFOS
+from machineMonitor.machineManager.core import ICON_FOLDER
 
 # ==== global ==== #
 
@@ -49,6 +52,12 @@ class MachineManagerUi(QtWidgets.QDialog):
         nameLayout.setStretch(1, 3)
 
         self.mainLayout.addLayout(nameLayout)
+
+        self.infoLine = QtWidgets.QLineEdit()
+        self.infoLine.setMinimumSize(self.uiWidth, 20)
+        self.infoLine.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.infoLine.setVisible(False)
+        self.mainLayout.addWidget(self.infoLine)
 
         spacer = QtWidgets.QSpacerItem((self.uiWidth // 4) * 3, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
@@ -93,9 +102,11 @@ class MachineManagerUi(QtWidgets.QDialog):
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         layout.addWidget(spacer)
 
-        self.endButton = QtWidgets.QPushButton('save')
+        self.endButton = QtWidgets.QPushButton('   save')
         self.endButton.setMinimumSize(self.uiWidth // 4, 20)
         self.endButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.endButton.setIcon(QIcon(os.path.join(ICON_FOLDER, f'save.png')))
+        self.endButton.setEnabled(False)
         layout.addWidget(self.endButton)
 
         self.mainLayout.addLayout(layout)

@@ -14,12 +14,10 @@ from functools import partial
 from PySide2 import QtWidgets
 
 # ==== local ===== #
-from library.general.uiLib import getMayaMainWindow
-from library.general.uiLib import applyStyleSheet
-from library.general.uiLib import loadUi
+from machineMonitor.library.general.uiLib import applyStyleSheet
+from machineMonitor.library.general.uiLib import loadUi
 
 # ==== global ==== #
-MAYA_ENV = getMayaMainWindow()
 
 
 class MachineManager:
@@ -36,6 +34,7 @@ class MachineManager:
         self.nameField = self.ui.nameField
         self.infoLayout = self.ui.infoLayout
         self.endButton = self.ui.endButton
+        self.infoLine = self.ui.infoLine
         self.uiMenus = self.ui.uiMenus
 
     def fillUi(self):
@@ -45,22 +44,16 @@ class MachineManager:
         print('connectWidgets')
 
     def initializeUi(self, *args):
-        if MAYA_ENV:
-            from library.maya.windowLib import dockPySide2UI, closeWindow
-            closeWindow(self.ui)
-            dockPySide2UI(self.ui)
+        if QtWidgets.QApplication.instance() is None:
+            self.app = QtWidgets.QApplication(sys.argv)
         else:
-            if QtWidgets.QApplication.instance() is None:
-                self.app = QtWidgets.QApplication(sys.argv)
-            else:
-                self.app = QtWidgets.QApplication.instance()
+            self.app = QtWidgets.QApplication.instance()
 
-            if isinstance(self.ui, QtWidgets.QDialog):
-                self.ui.exec_()
-            else:
-                self.ui.show()
+        if isinstance(self.ui, QtWidgets.QDialog):
+            self.ui.exec_()
+        else:
+            self.ui.show()
 
 
 if __name__ == "__main__":
-    if not MAYA_ENV:
-        MachineManager()
+    MachineManager()
