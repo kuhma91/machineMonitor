@@ -12,10 +12,12 @@ import os
 # ==== third ==== #
 from PySide2 import QtWidgets
 from PySide2 import QtCore
+from PySide2.QtCore import Qt
 from PySide2.QtGui import QIcon
 
 # ==== local ===== #
 from machineMonitor.library.general.stringLib import formatString
+from machineMonitor.library.general.infoLib import COLORS
 from machineMonitor.machineManager.core import NEEDED_INFOS
 from machineMonitor.machineManager.core import ICON_FOLDER
 
@@ -39,9 +41,9 @@ class MachineManagerUi(QtWidgets.QDialog):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         nameLayout = QtWidgets.QHBoxLayout()
-        label = QtWidgets.QLabel('name')
+        label = QtWidgets.QLabel('machine name : ')
         label.setMinimumSize(self.uiWidth // 4, 20)
-        label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         nameLayout.addWidget(label)
 
         self.nameField = QtWidgets.QLineEdit()
@@ -53,9 +55,10 @@ class MachineManagerUi(QtWidgets.QDialog):
 
         self.mainLayout.addLayout(nameLayout)
 
-        self.infoLine = QtWidgets.QLineEdit()
+        self.infoLine = QtWidgets.QLabel()
         self.infoLine.setMinimumSize(self.uiWidth, 20)
         self.infoLine.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.infoLine.setAlignment(Qt.AlignCenter)
         self.infoLine.setVisible(False)
         self.mainLayout.addWidget(self.infoLine)
 
@@ -63,12 +66,11 @@ class MachineManagerUi(QtWidgets.QDialog):
         self.mainLayout.addItem(spacer)
 
         self.infoLayout = QtWidgets.QVBoxLayout()
-
         for name, defaultValue in NEEDED_INFOS.items():
             layout = QtWidgets.QHBoxLayout()
-            label = QtWidgets.QLabel(name)
+            label = QtWidgets.QLabel(f'{name} : ')
             label.setMinimumSize(self.uiWidth // 3, 20)
-            label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+            label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             layout.addWidget(label)
 
             if isinstance(defaultValue, list) or isinstance(defaultValue, bool):
@@ -89,9 +91,35 @@ class MachineManagerUi(QtWidgets.QDialog):
             layout.setStretch(1, 2)
 
             self.infoLayout.addLayout(layout)
-            self.uiMenus.setdefault('neededInfo', {})[name] = widget
+            self.uiMenus.setdefault('neededInfo', {})[name] =  widget
 
         self.mainLayout.addLayout(self.infoLayout)
+
+        spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.mainLayout.addItem(spacer)
+
+        layout = QtWidgets.QHBoxLayout()
+        self.commentButton = QtWidgets.QPushButton(f'-  commentaire')
+        self.commentButton.setMinimumSize(self.uiWidth // 4, 20)
+        self.commentButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.commentButton.setFlat(True)
+        self.commentButton.setStyleSheet("background:transparent; border:none; color: rgb(212, 212, 212);")
+        layout.addWidget(self.commentButton)
+
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Plain)
+        line.setLineWidth(1)
+        line.setStyleSheet("background-color: black;")
+        layout.addWidget(line)
+
+        self.mainLayout.addLayout(layout)
+
+        self.commentField = QtWidgets.QTextEdit()
+        self.commentField.setMinimumSize(self.uiWidth, 250)
+        self.commentField.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.commentField.setVisible(False)
+        self.mainLayout.addWidget(self.commentField)
 
         spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
