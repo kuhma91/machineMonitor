@@ -122,3 +122,27 @@ def loadUi(mainModule, className, asDialog=False):
         raise
 
     return uiInstance
+
+
+def scrollLayout(parentLayout=None):
+    """
+    Creates a scrollable layout and adds it to the given parent layout.
+
+    :param parentLayout: The layout to which the scroll area will be added.
+    :type parentLayout: QtWidgets.QLayout
+
+    :return: The content layout inside the scroll area, where widgets can be added.
+    :rtype: QtWidgets.QVBoxLayout
+    """
+    scrollArea = QtWidgets.QScrollArea()
+    scrollArea.setWidgetResizable(True)
+
+    contentWidget = QtWidgets.QWidget()
+    contentLayout = QtWidgets.QVBoxLayout(contentWidget)
+
+    scrollArea.setWidget(contentWidget)
+
+    if parentLayout:
+        parentLayout.addWidget(scrollArea)
+
+    return scrollArea, contentLayout
