@@ -20,6 +20,7 @@ from machineMonitor.library.general.stringLib import formatString
 from machineMonitor.library.general.infoLib import COLORS
 from machineMonitor.machineManager.core import NEEDED_INFOS
 from machineMonitor.machineManager.core import ICON_FOLDER
+from machineMonitor.machineManager.core import BUTTONS
 
 # ==== global ==== #
 
@@ -46,12 +47,27 @@ class MachineManagerUi(QtWidgets.QDialog):
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         nameLayout.addWidget(label)
 
+        self.nameBox = QtWidgets.QComboBox()
+        self.nameBox.setMinimumSize((self.uiWidth // 4) * 3, 20)
+        self.nameBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        nameLayout.addWidget(self.nameBox)
+
         self.nameField = QtWidgets.QLineEdit()
         self.nameField.setMinimumSize((self.uiWidth // 4) * 3, 20)
         self.nameField.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.nameField.setVisible(False)
         nameLayout.addWidget(self.nameField)
+
+        for name in BUTTONS:
+            button = QtWidgets.QPushButton()
+            button.setMinimumSize(20, 20)
+            button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+            button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
+            nameLayout.addWidget(button)
+
         nameLayout.setStretch(0, 1)
         nameLayout.setStretch(1, 3)
+        nameLayout.setStretch(2, 3)
 
         self.mainLayout.addLayout(nameLayout)
 
@@ -86,6 +102,7 @@ class MachineManagerUi(QtWidgets.QDialog):
 
             widget.setMinimumSize((self.uiWidth // 3) * 2, 20)
             widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+            widget.setEnabled(False)
             layout.addWidget(widget)
             layout.setStretch(0, 1)
             layout.setStretch(1, 2)
@@ -124,7 +141,10 @@ class MachineManagerUi(QtWidgets.QDialog):
         spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
 
-        layout = QtWidgets.QHBoxLayout()
+        container = QtWidgets.QWidget()
+        container.setVisible(False)
+
+        layout = QtWidgets.QHBoxLayout(container)
         spacer = QtWidgets.QLabel('')
         spacer.setMinimumSize((self.uiWidth // 4) * 2, 20)
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -137,8 +157,8 @@ class MachineManagerUi(QtWidgets.QDialog):
         self.endButton.setEnabled(False)
         layout.addWidget(self.endButton)
 
-        self.mainLayout.addLayout(layout)
         layout.setStretch(0, 3)
         layout.setStretch(1, 1)
+        self.mainLayout.addWidget(container)
 
 

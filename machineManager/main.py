@@ -38,6 +38,7 @@ class MachineManager:
 
         self.storeWidget()
         self.connectWidgets()
+        self.fillUi()
         applyStyleSheet(self.ui, excluded=self.exceptions)
         self.initializeUi()
 
@@ -45,6 +46,7 @@ class MachineManager:
         self.uiMenus = self.ui.uiMenus
 
         self.nameField = self.ui.nameField
+        self.nameBox = self.ui.nameBox
         self.infoLayout = self.ui.infoLayout
         self.endButton = self.ui.endButton
         self.infoLine = self.ui.infoLine
@@ -53,12 +55,35 @@ class MachineManager:
         self.commentField = self.ui.commentField
         self.widgets = [w for w in self.uiMenus.get('neededInfo', {}).values() if isinstance(w, QtWidgets.QLineEdit)]
 
+    def fillUi(self, *args):
+        machineData = getMachineData()
+
+        machines = sorted(list(machineData.keys()))
+        self.nameBox.addItems(machines)
+        self.updateField()
+
     def connectWidgets(self):
         self.commentButton.clicked.connect(partial(self.foldCommand))
         self.endButton.clicked.connect(partial(self.saveNewMachineInfo))
         for widget in self.widgets:
             widget.textChanged.connect(lambda _: self.checkGivenInfo())
         self.nameField.textChanged.connect(partial(self.checkGivenInfo))
+        self.nameBox.currentTextChanged.connect(partial(self.updateField))
+
+    def updateField(self, *args):
+        machineData = getMachineData()
+        machine = self.nameBox.currentText()
+        data = machineData[machine]
+
+        for name, widget in self.uiMenus.get('neededInfo', {}).items():
+            value = data[name]
+            if isinstance(widget, QtWidgets.QComboBox):
+                widget.setCurrentText(value)
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                widget.setText(value)
+
+        comment = data['comment']
+        self.commentField.setText(comment)
 
     def checkGivenInfo(self, *args):
         machineData = getMachineData()

@@ -24,6 +24,7 @@ NEEDED_INFOS = {'secteur': ['1A', '1B', '1C', '2A', '2B', '2C'],
                 "annee d'acquisition": None,
                 'en service': True}
 MACHINE_JSON = os.path.join(BASE_FOLDER, 'data', 'machine.json')
+BUTTONS = ['add', 'sub', 'edit']
 
 
 def getMachineData():
