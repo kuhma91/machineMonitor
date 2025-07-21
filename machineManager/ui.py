@@ -141,10 +141,10 @@ class MachineManagerUi(QtWidgets.QDialog):
         spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
 
-        container = QtWidgets.QWidget()
-        container.setVisible(False)
+        self.endContainer = QtWidgets.QWidget()
+        self.endContainer.setVisible(False)
 
-        layout = QtWidgets.QHBoxLayout(container)
+        layout = QtWidgets.QHBoxLayout(self.endContainer)
         spacer = QtWidgets.QLabel('')
         spacer.setMinimumSize((self.uiWidth // 4) * 2, 20)
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -159,6 +159,6 @@ class MachineManagerUi(QtWidgets.QDialog):
 
         layout.setStretch(0, 3)
         layout.setStretch(1, 1)
-        self.mainLayout.addWidget(container)
+        self.mainLayout.addWidget(self.endContainer)
 
 

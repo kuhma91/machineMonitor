@@ -35,6 +35,7 @@ class MachineManager:
 
         self.exceptions = []
         self.unfold = False
+        self.mode = 'read'
 
         self.storeWidget()
         self.connectWidgets()
@@ -53,6 +54,7 @@ class MachineManager:
         self.commentButton = self.ui.commentButton
         self.exceptions.append(self.commentButton)
         self.commentField = self.ui.commentField
+        self.endContainer = self.ui.endContainer
         self.widgets = [w for w in self.uiMenus.get('neededInfo', {}).values() if isinstance(w, QtWidgets.QLineEdit)]
 
     def fillUi(self, *args):
@@ -136,7 +138,7 @@ class MachineManager:
         machineData['comment'] = self.commentField.toPlainText() or ''
 
         saveData(machineName, machineData)
-        self.ui.close()
+
 
     def foldCommand(self, *args):
         text = '-  commentaire' if self.unfold else '⬐ commentaire'
