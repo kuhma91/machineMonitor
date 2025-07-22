@@ -64,6 +64,7 @@ class MachineManagerUi(QtWidgets.QDialog):
             button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
             nameLayout.addWidget(button)
+            self.uiMenus.setdefault('optionButton', {})[name] = button
 
         nameLayout.setStretch(0, 1)
         nameLayout.setStretch(1, 3)
@@ -149,6 +150,13 @@ class MachineManagerUi(QtWidgets.QDialog):
         spacer.setMinimumSize((self.uiWidth // 4) * 2, 20)
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         layout.addWidget(spacer)
+
+        self.cancelButton = QtWidgets.QPushButton('   cancel')
+        self.cancelButton.setMinimumSize(self.uiWidth // 4, 20)
+        self.cancelButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.cancelButton.setIcon(QIcon(os.path.join(ICON_FOLDER, f'cancel.png')))
+        self.cancelButton.setVisible(True)
+        layout.addWidget(self.cancelButton)
 
         self.endButton = QtWidgets.QPushButton('   save')
         self.endButton.setMinimumSize(self.uiWidth // 4, 20)

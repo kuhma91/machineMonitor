@@ -24,7 +24,42 @@ NEEDED_INFOS = {'secteur': ['1A', '1B', '1C', '2A', '2B', '2C'],
                 "annee d'acquisition": None,
                 'en service': True}
 MACHINE_JSON = os.path.join(BASE_FOLDER, 'data', 'machine.json')
-BUTTONS = ['add', 'sub', 'edit']
+BUTTONS = ['edit', 'sub', 'add']
+
+
+def addEntry(name, data):
+    """
+    Add or update an entry in the MACHINE_JSON file and save the updated data.
+
+    :param name: The key under which to store the data.
+    :type name: str
+    :param data: The data to associate with the given key.
+    :type data: dict
+    """
+    if not os.path.exists(MACHINE_JSON):
+        currentData = {name: data}
+
+    else:
+        currentData = getMachineData()
+        currentData[name] = data
+
+    saveData(currentData)
+
+
+def deleteEntry(name):
+    """
+    Delete the specified entry from the MACHINE_JSON file and save the updated data.
+
+    :param name: The key of the entry to delete.
+    :type name: str
+    """
+    if not os.path.exists(MACHINE_JSON):
+        return
+
+    currentData = getMachineData()
+    currentData.pop(name, None)
+
+    saveData(currentData)
 
 
 def getMachineData():
@@ -41,23 +76,14 @@ def getMachineData():
     return json.load(open(MACHINE_JSON, 'r', encoding='utf-8'))
 
 
-def saveData(name, data):
+def saveData(data):
     """
-    Save the provided data under the given name in the MACHINE_JSON file.
+    Save the given data to the MACHINE_JSON file in JSON format.
 
-    :param name: Key under which the data will be stored.
-    :type name: str
-    :param data: Data to save; must be JSON‑serializable.
-    :type data: Any
+    :param data: The data to write to the JSON file.
+    :type data: dict
     """
-    if not os.path.exists(MACHINE_JSON):
-        currentData = {name: data}
-
-    else:
-        currentData = getMachineData()
-        currentData[name] = data
-
     with open(MACHINE_JSON, 'w', encoding='utf-8') as f:
-        json.dump(currentData, f)
+        json.dump(data, f)
 
-    print('saved as : {}')
+    print(f'saved as : {MACHINE_JSON}')
