@@ -7,11 +7,13 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
+from functools import partial
 import os
 import sys
 import importlib
 
 # ==== third ==== #
+from PySide2.QtCore import Qt
 from PySide2 import QtWidgets
 
 # ==== local ===== #
@@ -79,6 +81,59 @@ def applyStyleSheet(ui=None, widgets=None, excluded=None):
     for widget, style in widgetData.items():
         if widget:
             widget.setStyleSheet(style)
+
+
+def confirmDialog(message, parent=None):
+    class Confirm(QtWidgets.QDialog):
+        def __init__(self):
+            super().__init__(parent)
+            self.setWindowTitle("Prompt")
+            self.setModal(True)
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+
+            self.uiWidth = 150
+
+            self.result = False
+
+            mainLayout = QtWidgets.QVBoxLayout(self)
+
+            label = QtWidgets.QLabel(message)
+            label.setMinimumSize(self.uiWidth, 25)
+            label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+            mainLayout.addWidget(label)
+
+            spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+            mainLayout.addItem(spacer)
+
+            layout = QtWidgets.QHBoxLayout()
+            spacer = QtWidgets.QSpacerItem((self.uiWidth // 4) * 2, 25, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+            layout.addItem(spacer)
+
+            okBtn = QtWidgets.QPushButton("OK")
+            okBtn.setMinimumSize(self.uiWidth // 4, 25)
+            okBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+            okBtn.clicked.connect(partial(self.accept, True))
+            layout.addWidget(okBtn)
+
+            stopBtn = QtWidgets.QPushButton("Cancel")
+            stopBtn.setMinimumSize(self.uiWidth // 4, 25)
+            stopBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+            stopBtn.clicked.connect(partial(self.accept, False))
+            layout.addWidget(stopBtn)
+
+            mainLayout.addLayout(layout)
+
+            applyStyleSheet(self)
+
+        def accept(self, value, *args):
+            self.result = value
+            super().accept()
+
+    dlg = Confirm()
+    if dlg.exec_():
+        return dlg.result
+
+    return None
 
 
 def loadUi(mainModule, className, asDialog=False):
