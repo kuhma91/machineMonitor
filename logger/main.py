@@ -14,22 +14,24 @@ from functools import partial
 from PySide2 import QtWidgets
 
 # ==== local ===== #
-from library.general.uiLib import getMayaMainWindow
-from library.general.uiLib import applyStyleSheet
-from library.general.uiLib import loadUi
+from machineMonitor.library.general.uiLib import applyStyleSheet
+from machineMonitor.library.general.uiLib import loadUi
 
 # ==== global ==== #
-MAYA_ENV = getMayaMainWindow()
 
 
-class MachineMonitorLogger:
+class Logger:
     def __init__(self, asDialog=False):
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
+
+        self.uiMenus = self.ui.uiMenus
+
+        self.unfolded = False
 
         self.storeWidget()
         self.fillUi()
         self.connectWidgets()
-        applyStyleSheet(self.ui)
+        applyStyleSheet(self.ui, excluded=self.uiMenus['excluded'])
         self.initializeUi()
 
     def storeWidget(self):
@@ -42,22 +44,16 @@ class MachineMonitorLogger:
         print('connectWidgets')
 
     def initializeUi(self, *args):
-        if MAYA_ENV:
-            from library.maya.windowLib import dockPySide2UI, closeWindow
-            closeWindow(self.ui)
-            dockPySide2UI(self.ui)
-        else:
-            if QtWidgets.QApplication.instance() is None:
+        if QtWidgets.QApplication.instance() is None:
                 self.app = QtWidgets.QApplication(sys.argv)
-            else:
-                self.app = QtWidgets.QApplication.instance()
+        else:
+            self.app = QtWidgets.QApplication.instance()
 
-            if isinstance(self.ui, QtWidgets.QDialog):
-                self.ui.exec_()
-            else:
-                self.ui.show()
+        if isinstance(self.ui, QtWidgets.QDialog):
+            self.ui.exec_()
+        else:
+            self.ui.show()
 
 
 if __name__ == "__main__":
-    if not MAYA_ENV:
-        MachineMonitorLogger()
+    Logger()

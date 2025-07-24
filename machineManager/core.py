@@ -24,7 +24,7 @@ NEEDED_INFOS = {'secteur': ['1A', '1B', '1C', '2A', '2B', '2C'],
                 "annee d'acquisition": None,
                 'en service': True}
 MACHINE_FOLDER = os.path.join(BASE_FOLDER, 'data', 'machines')
-BUTTONS = ['edit', 'sub', 'add']
+BUTTONS = ['edit', 'delete', 'add']
 
 
 def addEntry(name, data):

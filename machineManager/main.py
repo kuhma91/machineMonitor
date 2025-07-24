@@ -108,7 +108,7 @@ class MachineManager:
 
     def optionCommand(self, toDo, *args):
         selected = self.nameBox.currentText()
-        if toDo == 'sub':
+        if toDo == 'delete':
             answer = confirmDialog(f'are you sure you want to delete : {selected}')
             if not answer:
                 return
