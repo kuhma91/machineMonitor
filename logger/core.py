@@ -7,9 +7,13 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
+import uuid
+import os
 
 # ==== third ==== #
 
 # ==== local ===== #
 
 # ==== global ==== #
+data = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'data', 'loggs')
+print(data)

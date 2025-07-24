@@ -1,0 +1,9 @@
+{
+  "secteur": "1A",
+  "type": "CNC",
+  "constructeur": "moi2",
+  "numero de serie": "789101112",
+  "annee d'acquisition": "2025",
+  "en service": "Non",
+  "comment": "second essaie pour l'implementation"
+}
