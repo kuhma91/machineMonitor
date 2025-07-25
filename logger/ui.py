@@ -13,6 +13,7 @@ import os
 from PySide2 import QtWidgets
 from PySide2 import QtCore
 from PySide2.QtGui import QIcon
+from PySide2.QtCore import Qt
 
 # ==== local ===== #
 from machineMonitor.library.general.stringLib import formatString
@@ -57,6 +58,7 @@ class LoggerUi(QtWidgets.QDialog):
             button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
             button.setToolTip(name)
+            self.uiMenus.setdefault('optionButtons', {})[name] = button
             layout.addWidget(button)
 
         self.mainLayout.addLayout(layout)
@@ -94,20 +96,18 @@ class LoggerUi(QtWidgets.QDialog):
         self.mainLayout.addItem(spacer)
 
         layout = QtWidgets.QHBoxLayout()
-        self.commentButton = QtWidgets.QPushButton(f'-  commentaire')
+        self.commentButton = QtWidgets.QPushButton(f'commentaire   ')
         self.commentButton.setMinimumSize(self.uiWidth // 4, 20)
         self.commentButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.commentButton.setFlat(True)
         self.commentButton.setStyleSheet("background:transparent; border:none; color: rgb(212, 212, 212);")
+        self.commentButton.setIcon(QIcon(os.path.join(ICON_FOLDER, 'folded.png')))
+        self.commentButton.setLayoutDirection(Qt.RightToLeft)
         self.uiMenus.setdefault('excluded', []).append(self.commentButton)
         layout.addWidget(self.commentButton)
 
-        line = QtWidgets.QFrame()
-        line.setFrameShape(QtWidgets.QFrame.HLine)
-        line.setFrameShadow(QtWidgets.QFrame.Plain)
-        line.setLineWidth(1)
-        line.setStyleSheet("background-color: black;")
-        layout.addWidget(line)
+        spacer = QtWidgets.QSpacerItem((self.uiWidth // 4) * 3, 30, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        layout.addItem(spacer)
 
         self.mainLayout.addLayout(layout)
 
@@ -131,7 +131,8 @@ class LoggerUi(QtWidgets.QDialog):
         self.cancelButton.setMinimumSize(self.uiWidth // 4, 20)
         self.cancelButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.cancelButton.setIcon(QIcon(os.path.join(ICON_FOLDER, f'cancel.png')))
-        self.cancelButton.setVisible(True)
+        self.cancelButton.setVisible(False)
+        self.cancelButton.setEnabled(False)
         layout.addWidget(self.cancelButton)
 
         self.endButton = QtWidgets.QPushButton('   save')

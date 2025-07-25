@@ -116,7 +116,6 @@ class MachineManager:
             deleteEntry(selected)
             self.restartUi()
 
-
         elif toDo == 'edit':
             self.mode = 'edit'
             self.nameBox.setVisible(True)
@@ -146,7 +145,6 @@ class MachineManager:
                 widget.clear()
 
             self.commentField.clear()
-
 
     def updateField(self, *args):
         machineData = getMachineData()
