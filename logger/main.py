@@ -131,17 +131,19 @@ class Logger:
         }
 
         result = saveData(data, mode='temp' if not machine else 'save')
-        if not result:
+        if result:
             choice = confirmDialog(message=f'fail while saving data : {result} ! do you want to backup ?')
             if not choice:
                 return
 
             result = saveData(data, mode='backup')
-            if not result:
-                self.ui.close()
+            if result:
+                print(f'fail to backup : {result}')
 
         if self.fromTemp:
             os.remove(self.fromTemp)
+
+        self.ui.close()
 
     def initializeUi(self, *args):
         if QtWidgets.QApplication.instance() is None:

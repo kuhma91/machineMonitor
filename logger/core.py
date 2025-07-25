@@ -31,7 +31,7 @@ R, G, B = COLORS['yellow']
 NO_MACHINE_CMD = (f"QComboBox {{ border: 2px solid rgb({R}, {G}, {B});"
                   f"color: rgb(212, 212, 212); "
                   f"background-color: rgb(85, 85, 85)}}")
-DATE_FILE_PATTERN = r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])\.(?:json|txt)$'
+DATE_FILE_PATTERN = r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])$'
 
 
 
@@ -110,14 +110,14 @@ def getFileData(folder):
 
     data = {}
     for item in os.listdir(folder):
-        if not re.match(DATE_FILE_PATTERN, item):
+        shortName = os.path.splitext(item)[0].split('__')[0]
+        if not re.match(DATE_FILE_PATTERN, shortName):
             continue
 
-        shortName = os.path.splitext(item)[0].split('__')[0]
         data[shortName] = os.path.join(folder, item)
 
     if not data:
-        return None
+        return {}
 
     latestDateStr = max(data.keys(), key=lambda ds: datetime.strptime(ds, '%Y_%m_%d'))
     return data[latestDateStr]
@@ -153,7 +153,7 @@ def getDataFromFile(filePath):
     :return: Parsed data as a dict, or an empty dict if the file does not exist or format is unsupported.
     :rtype: dict
     """
-    if not os.path.exists(filePath):
+    if not filePath or not os.path.exists(filePath):
         return {}
 
     with open(filePath, 'r', encoding='utf-8') as f:
@@ -254,7 +254,7 @@ def saveData(data, mode='save'):
             elif filePath.endswith('.txt'):
                 f.write('\n'.join([f'- {k} : {v}' for k, v in data.items()]))
 
-            print(f'backup as : {filePath}')
+            print(f'{mode} as : {filePath}')
             return None
 
     except Exception as e:
