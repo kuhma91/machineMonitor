@@ -18,8 +18,10 @@ from PySide2.QtCore import Qt
 # ==== local ===== #
 from machineMonitor.library.general.stringLib import formatString
 from machineMonitor.logger.core import getAuthorisation
+from machineMonitor.logger.core import NO_MACHINE_CMD
 from machineMonitor.logger.core import AUTHORISATIONS
 from machineMonitor.logger.core import ICON_FOLDER
+from machineMonitor.logger.core import R, G, B
 
 # ==== global ==== #
 
@@ -49,6 +51,8 @@ class LoggerUi(QtWidgets.QDialog):
         self.machineBox = QtWidgets.QComboBox()
         self.machineBox.setMinimumSize(((self.uiWidth // 4) * 3) - 50, 20)
         self.machineBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.machineBox.setStyleSheet(NO_MACHINE_CMD)
+        self.uiMenus.setdefault('excluded', []).append(self.machineBox)
         layout.addWidget(self.machineBox)
 
         buttons = AUTHORISATIONS.get(getAuthorisation(), [])
@@ -62,6 +66,14 @@ class LoggerUi(QtWidgets.QDialog):
             layout.addWidget(button)
 
         self.mainLayout.addLayout(layout)
+
+        self.infoLine = QtWidgets.QLabel('Machine not listed? temp Save and notify your supervisor.')
+        self.infoLine.setMinimumSize(self.uiWidth, 20)
+        self.infoLine.setMinimumSize(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.infoLine.setAlignment(Qt.AlignCenter)
+        self.infoLine.setStyleSheet(f"QLabel {{ color: rgb({R}, {G}, {B}); }}")
+        self.uiMenus.setdefault('excluded', []).append(self.infoLine)
+        self.mainLayout.addWidget(self.infoLine)
 
         spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
@@ -135,7 +147,7 @@ class LoggerUi(QtWidgets.QDialog):
         self.cancelButton.setEnabled(False)
         layout.addWidget(self.cancelButton)
 
-        self.endButton = QtWidgets.QPushButton('   save')
+        self.endButton = QtWidgets.QPushButton('   temporary')
         self.endButton.setMinimumSize(self.uiWidth // 4, 20)
         self.endButton.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.endButton.setIcon(QIcon(os.path.join(ICON_FOLDER, f'save.png')))
