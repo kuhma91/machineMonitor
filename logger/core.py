@@ -123,7 +123,6 @@ def getFileData(folder):
     return data[latestDateStr]
 
 
-
 def getInitInfo():
     """
     Retrieve the most recent initialization file for the current user and load its contents.
