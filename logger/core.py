@@ -9,6 +9,7 @@ description:
 # ==== native ==== #
 import uuid
 import os
+import re
 import csv
 import json
 from datetime import datetime
@@ -30,6 +31,40 @@ R, G, B = COLORS['yellow']
 NO_MACHINE_CMD = (f"QComboBox {{ border: 2px solid rgb({R}, {G}, {B});"
                   f"color: rgb(212, 212, 212); "
                   f"background-color: rgb(85, 85, 85)}}")
+DATE_FILE_PATTERN = r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])\.(?:json|txt)$'
+
+
+
+def clearTempData():
+    """
+    Remove temporary data files older than 3 days from the temp folder.
+
+    This function checks all files returned by getTempData() and deletes
+    those whose date (parsed from filename) is more than 3 days before now.
+    """
+    tempData = getTempData()
+    cutoff = datetime.now() - timedelta(days=3)
+    for dateStr, filePath in tempData.items():
+        fileDate = datetime.strptime(dateStr, '%Y_%m_%d')
+        if fileDate < cutoff:
+            os.remove(filePath)
+            print('deleted: filePath')
+
+
+def getAuthorisation():
+    """
+    Retrieve the authorization level for the current OS user.
+
+    :return: The authorization level from employees data, or 'user' if the user is not found.
+    :rtype: str
+    """
+    user = os.getlogin().lower()
+    employeesData = getEmployeesData()
+
+    if user not in employeesData:
+        return 'user'
+
+    return employeesData.get(user, {}).get('authorisation', 'user')
 
 
 def getEmployeesData():
@@ -60,36 +95,76 @@ def getEmployeesData():
     return data
 
 
-def getAuthorisation():
+def getFileData(folder):
     """
-    Retrieve the authorization level for the current OS user.
+    Retrieve the most recent file in the specified folder matching the date pattern.
 
-    :return: The authorization level from employees data, or 'user' if the user is not found.
-    :rtype: str
+    :param folder: Path to the directory containing dated files.
+    :type folder: str
+
+    :return: Full path of the latest matching file, or None if folder doesn't exist or no matching files are found.
+    :rtype: str or None
     """
-    user = os.getlogin().lower()
-    employeesData = getEmployeesData()
+    if not os.path.exists(folder):
+        return None
 
-    if user not in employeesData:
-        return 'user'
+    data = {}
+    for item in os.listdir(folder):
+        if not re.match(DATE_FILE_PATTERN, item):
+            continue
 
-    return employeesData.get(user, {}).get('authorisation', 'user')
+        shortName = os.path.splitext(item)[0].split('__')[0]
+        data[shortName] = os.path.join(folder, item)
+
+    if not data:
+        return None
+
+    latestDateStr = max(data.keys(), key=lambda ds: datetime.strptime(ds, '%Y_%m_%d'))
+    return data[latestDateStr]
 
 
-def clearTempData():
+
+def getInitInfo():
     """
-    Remove temporary data files older than 3 days from the temp folder.
+    Retrieve the most recent initialization file for the current user and load its contents.
 
-    This function checks all files returned by getTempData() and deletes
-    those whose date (parsed from filename) is more than 3 days before now.
+    :return: A tuple (filePath, data, fromError):
+        - filePath (str or None): Path to the latest file, or None if none found.
+        - data (dict): Parsed contents of the file.
+        - fromError (bool): True if the file came from the error folder, False otherwise.
+    :rtype: tuple[str or None, dict, bool]
     """
-    tempData = getTempData()
-    cutoff = datetime.now() - timedelta(days=3)
-    for dateStr, filePath in tempData.items():
-        fileDate = datetime.strptime(dateStr, '%Y_%m_%d')
-        if fileDate < cutoff:
-            os.remove(filePath)
-            print('deleted: filePath')
+    userName = os.getlogin()
+    filePath = getFileData(os.path.join(LOGS_REPO, '.temp', 'error', userName))
+    fromError = True
+    if not filePath:
+        filePath = getFileData(os.path.join(LOGS_REPO, '.temp', userName))
+        fromError = False
+
+    return filePath, getDataFromFile(filePath), fromError
+
+
+def getDataFromFile(filePath):
+    """
+    Load data from the given file path, handling JSON and TXT formats.
+
+    :param filePath: Path to the file to read.
+    :type filePath: str
+
+    :return: Parsed data as a dict, or an empty dict if the file does not exist or format is unsupported.
+    :rtype: dict
+    """
+    if not os.path.exists(filePath):
+        return {}
+
+    with open(filePath, 'r', encoding='utf-8') as f:
+        if filePath.endswith('.json'):
+            return json.load(f)
+
+        if filePath.endswith('.txt'):
+            return {l.split('-')[-1].split(':')[0].strip(): l.split(':')[-1].strip() for l in f.readlines()}
+
+        return {}
 
 
 def getTempData():
@@ -133,30 +208,56 @@ def getUUID():
     return newId
 
 
-def saveData(data, temp=False):
+def saveData(data, mode='save'):
     """
-    Save data to a JSON file in LOGS_REPO, using a timestamped or UUID-based filename.
+    Save data to a file in LOGS_REPO according to the given mode.
 
-    :param data: The data to save as JSON.
+    :param data: The dictionary to serialize and save.
     :type data: dict
-    :param temp: If True, saves under LOGS_REPO/.temp/<username>/ with timestamp; otherwise uses UUID filename.
-    :type temp: bool
+    :param mode:
+        - 'save'   → write a new UUID-named JSON in LOGS_REPO
+        - 'temp'   → write a timestamped JSON under .temp/<username>/
+        - 'backup' → write a timestamped TXT under .temp/error/<username>/
+        Any other value prints an error and does nothing.
+    :type mode: str
+    :return: None if successful or mode unknown, otherwise returns the caught Exception.
+    :rtype: None or Exception
     """
     timeStamp = datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
     userName = os.getlogin()
     newUuid = getUUID()
 
-    if temp:
-        fileName = os.path.join(LOGS_REPO, '.temp', userName, f'{timeStamp}.json')
-    else:
-        fileName = os.path.join(LOGS_REPO, f'{newUuid}.json')
+    data.update({'timeStamp': timeStamp, 'userName': userName})
 
-    folder = os.path.split(fileName)[0]
+    if mode == 'save':
+        filePath = os.path.join(LOGS_REPO, f'{newUuid}.json')
+
+    elif mode == 'temp':
+        filePath = os.path.join(LOGS_REPO, '.temp', userName, f'{timeStamp}.json')
+
+    elif mode == 'backup':
+        filePath = os.path.join(LOGS_REPO, '.temp', 'error', userName, f'{timeStamp}.txt')
+
+    else:
+        print(f'unknown mode : {mode}')
+        return
+
+    folder = os.path.split(filePath)[0]
     if not os.path.exists(folder):
         os.makedirs(folder)
         print(f'created : {folder}')
 
-    data.update({'timeStamp': timeStamp, 'userName': userName})
+    try:
+        with open(filePath, 'w', encoding='utf-8') as f:
+            if filePath.endswith('.json'):
+                json.dump(data, f)
 
-    with open(fileName, 'w', encoding='utf-8') as f:
-        json.dump(data, f)
+            elif filePath.endswith('.txt'):
+                f.write('\n'.join([f'- {k} : {v}' for k, v in data.items()]))
+
+            print(f'backup as : {filePath}')
+            return None
+
+    except Exception as e:
+        print(f'error while saving : {e}')
+        return e

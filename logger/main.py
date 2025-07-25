@@ -23,7 +23,8 @@ from machineMonitor.library.general.uiLib import confirmDialog
 from machineMonitor.library.general.uiLib import loadUi
 from machineMonitor.library.general.uiLib import STYLE_SHEET
 from machineMonitor.machineManager.core import getMachineData
-from machineMonitor.logger.core import LOG_TYPES, getTempData
+from machineMonitor.logger.core import LOG_TYPES
+from machineMonitor.logger.core import getInitInfo
 from machineMonitor.logger.core import ICON_FOLDER
 from machineMonitor.logger.core import NO_MACHINE_CMD
 from machineMonitor.logger.core import saveData
@@ -66,28 +67,27 @@ class Logger:
         self.machineBox.addItems(machines)
         self.logBox.addItems(LOG_TYPES)
 
-        tempData = getTempData()
-        if not tempData:
+        filePath, data, fromError = getInitInfo()
+        if not filePath:
             return
 
-        else:
+        if not fromError:
             choice = confirmDialog(message='temp file found ! do you want to load it ?')
             if not choice:
                 return
 
-            latestDateStr = max(tempData.keys(), key=lambda ds: datetime.strptime(ds, '%Y_%m_%d'))
-            lastestFile = tempData[latestDateStr]
-            with open(lastestFile, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+        self.machineBox.setCurrentText(data.get('machineName', ''))
+        self.logBox.setCurrentText(data.get('type'))
+        self.projectField.setText(data.get('project', ''))
+        self.commentField.setPlainText(data.get('comment', ''))
 
-            self.machineBox.setCurrentText(data.get('machineName', ''))
-            self.logBox.setCurrentText(data.get('type'))
-            self.projectField.setText(data.get('project', ''))
-            self.commentField.setPlainText(data.get('comment', ''))
+        self.endButton.setEnabled(True)
 
-            self.fromTemp = tempData[latestDateStr]
+        if fromError:
+            os.remove(filePath)
+            return
 
-            self.endButton.setEnabled(True)
+        self.fromTemp = filePath
 
     def connectWidgets(self):
         self.machineBox.currentTextChanged.connect(partial(self.changeMachineCommand))
@@ -129,7 +129,16 @@ class Logger:
             'project': self.projectField.text(),
             'comment': self.commentField.toPlainText()
         }
-        saveData(data, temp=not machine)
+
+        result = saveData(data, mode='temp' if not machine else 'save')
+        if not result:
+            choice = confirmDialog(message=f'fail while saving data : {result} ! do you want to backup ?')
+            if not choice:
+                return
+
+            result = saveData(data, mode='backup')
+            if not result:
+                self.ui.close()
 
         if self.fromTemp:
             os.remove(self.fromTemp)
