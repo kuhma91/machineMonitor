@@ -32,6 +32,7 @@ NO_MACHINE_CMD = (f"QComboBox {{ border: 2px solid rgb({R}, {G}, {B});"
                   f"color: rgb(212, 212, 212); "
                   f"background-color: rgb(85, 85, 85)}}")
 DATE_FILE_PATTERN = r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])$'
+LOG_FILTERS = ['machineName', 'type', 'project', 'userName']
 
 
 

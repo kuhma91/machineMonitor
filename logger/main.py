@@ -157,7 +157,7 @@ class Logger:
             self.ui.show()
 
 
-class LogsViewer:
+class LogViewer:
     def __init__(self, asDialog=False):
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 

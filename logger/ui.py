@@ -155,3 +155,23 @@ class LoggerUi(QtWidgets.QDialog):
         layout.setStretch(0, 3)
         layout.setStretch(1, 1)
         self.mainLayout.addLayout(layout)
+
+
+class LogViewerUi(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(LogViewerUi, self).__init__(parent)
+        self.uiName = formatString(__class__.__name__.split('Ui')[0])
+
+        self.uiWidth = 400
+        self.uiMenus = {}
+        self.setupUi()
+
+    def setupUi(self):
+        self.setWindowTitle(self.uiName)
+        self.setMinimumWidth(self.uiWidth + 45)
+        self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
+
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+
+
+
