@@ -21,6 +21,7 @@ from PySide2 import QtWidgets
 # ==== global ==== #
 STYLE_SHEET = {
     'QPushButton': "background-color: rgb(85, 85, 85); color: rgb(212, 212, 212); border: 4px solid rgb(85, 85, 85)",
+    'QComboBox': "background-color: rgb(85, 85, 85); color: rgb(212, 212, 212); border: none;",
     'QLabel': "color: rgb(212, 212, 212);",
     'QCheckBox': "color: rgb(212, 212, 212);",
     'QWidget': "background-color: transparent;",
