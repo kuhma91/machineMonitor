@@ -55,15 +55,15 @@ class LoggerUi(QtWidgets.QDialog):
         self.uiMenus.setdefault('excluded', []).append(self.machineBox)
         layout.addWidget(self.machineBox)
 
-        buttons = AUTHORISATIONS.get(getAuthorisation(), [])
-        for name in buttons:
-            button = QtWidgets.QPushButton('')
-            button.setMinimumSize(20, 20)
-            button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-            button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
-            button.setToolTip(name)
-            self.uiMenus.setdefault('optionButtons', {})[name] = button
-            layout.addWidget(button)
+        # buttons = AUTHORISATIONS.get(getAuthorisation(), [])
+        # for name in buttons:
+        #     button = QtWidgets.QPushButton('')
+        #     button.setMinimumSize(20, 20)
+        #     button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        #     button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
+        #     button.setToolTip(name)
+        #     self.uiMenus.setdefault('optionButtons', {})[name] = button
+        #     layout.addWidget(button)
 
         self.mainLayout.addLayout(layout)
 

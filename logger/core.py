@@ -6,13 +6,13 @@ creation date: 22/07/2025
 description: 
 ===============================================================================
 """
-import json
 # ==== native ==== #
-from datetime import datetime
 import uuid
 import os
 import csv
-import pprint
+import json
+from datetime import datetime
+from datetime import timedelta
 
 # ==== third ==== #
 
@@ -74,6 +74,45 @@ def getAuthorisation():
         return 'user'
 
     return employeesData.get(user, {}).get('authorisation', 'user')
+
+
+def clearTempData():
+    """
+    Remove temporary data files older than 3 days from the temp folder.
+
+    This function checks all files returned by getTempData() and deletes
+    those whose date (parsed from filename) is more than 3 days before now.
+    """
+    tempData = getTempData()
+    cutoff = datetime.now() - timedelta(days=3)
+    for dateStr, filePath in tempData.items():
+        fileDate = datetime.strptime(dateStr, '%Y_%m_%d')
+        if fileDate < cutoff:
+            os.remove(filePath)
+            print('deleted: filePath')
+
+
+def getTempData():
+    """
+    Collect temporary data files from the user's temp directory.
+
+    Scans LOGS_REPO/.temp/<username>/ for JSON files and returns
+    a dict mapping each file's date string (YYYY_MM_DD) to its full path.
+
+    :return: Mapping of date strings to file paths.
+    :rtype: dict
+    """
+    tempFolder = os.path.join(LOGS_REPO, '.temp', os.getlogin())
+
+    tempData = {}
+    if not os.path.exists(tempFolder):
+        return tempData
+
+    for item in os.listdir(tempFolder):
+        relatedDate = os.path.splitext(item)[0].split('__')[0]
+        tempData[relatedDate] = os.path.join(tempFolder, item)
+
+    return tempData
 
 
 def getUUID():

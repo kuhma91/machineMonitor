@@ -9,6 +9,8 @@ description:
 # ==== native ==== #
 import os
 import sys
+import json
+from datetime import datetime
 from functools import partial
 
 # ==== third ==== #
@@ -17,13 +19,15 @@ from PySide2.QtGui import QIcon
 
 # ==== local ===== #
 from machineMonitor.library.general.uiLib import applyStyleSheet
+from machineMonitor.library.general.uiLib import confirmDialog
 from machineMonitor.library.general.uiLib import loadUi
 from machineMonitor.library.general.uiLib import STYLE_SHEET
 from machineMonitor.machineManager.core import getMachineData
-from machineMonitor.logger.core import LOG_TYPES
+from machineMonitor.logger.core import LOG_TYPES, getTempData
 from machineMonitor.logger.core import ICON_FOLDER
 from machineMonitor.logger.core import NO_MACHINE_CMD
 from machineMonitor.logger.core import saveData
+from machineMonitor.logger.core import clearTempData
 
 # ==== global ==== #
 
@@ -35,7 +39,10 @@ class Logger:
         self.uiMenus = self.ui.uiMenus
 
         self.unfolded = False
+        self.fromTemp = None
         self.mode = 'create'
+
+        clearTempData()
 
         self.storeWidget()
         self.fillUi()
@@ -59,16 +66,34 @@ class Logger:
         self.machineBox.addItems(machines)
         self.logBox.addItems(LOG_TYPES)
 
-        # tempData = getTempData()
+        tempData = getTempData()
+        if not tempData:
+            return
 
+        else:
+            choice = confirmDialog(message='temp file found ! do you want to load it ?')
+            if not choice:
+                return
+
+            latestDateStr = max(tempData.keys(), key=lambda ds: datetime.strptime(ds, '%Y_%m_%d'))
+            lastestFile = tempData[latestDateStr]
+            with open(lastestFile, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            self.machineBox.setCurrentText(data.get('machineName', ''))
+            self.logBox.setCurrentText(data.get('type'))
+            self.projectField.setText(data.get('project', ''))
+            self.commentField.setPlainText(data.get('comment', ''))
+
+            self.fromTemp = tempData[latestDateStr]
+
+            self.endButton.setEnabled(True)
 
     def connectWidgets(self):
         self.machineBox.currentTextChanged.connect(partial(self.changeMachineCommand))
         self.projectField.textChanged.connect(partial(self.checkValidity))
         self.commentButton.clicked.connect(partial(self.foldCommand))
         self.endButton.clicked.connect(partial(self.saveCommand))
-        for name, button in self.uiMenus.get('optionButtons', {}).items():
-            button.clicked.connect(partial(self.optionCommand, name))
 
     def checkValidity(self, *args):
         project = self.projectField.text()
@@ -89,7 +114,6 @@ class Logger:
         self.endButton.setText(text)
         self.ui.adjustSize()
 
-
     def foldCommand(self, *args):
         icon = 'folded.png' if self.unfolded else 'unfolded.png'
         self.commentButton.setIcon(QIcon(os.path.join(ICON_FOLDER, icon)))
@@ -98,19 +122,17 @@ class Logger:
         self.ui.adjustSize()
 
     def saveCommand(self, *args):
-        if self.mode == 'create':
-            machine = self.machineBox.currentText()
-            data = {
-                'machineName': machine,
-                'type': self.logBox.currentText(),
-                'project': self.projectField.text(),
-                'comment': self.commentField.toPlainText()
-            }
-            saveData(data, temp=not machine)
+        machine = self.machineBox.currentText()
+        data = {
+            'machineName': machine,
+            'type': self.logBox.currentText(),
+            'project': self.projectField.text(),
+            'comment': self.commentField.toPlainText()
+        }
+        saveData(data, temp=not machine)
 
-
-    def optionCommand(self, name, *args):
-        print(name)
+        if self.fromTemp:
+            os.remove(self.fromTemp)
 
     def initializeUi(self, *args):
         if QtWidgets.QApplication.instance() is None:
