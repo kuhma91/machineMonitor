@@ -1,6 +1,6 @@
 {
   "secteur": "1A",
-  "type": "CNC",
+  "utilisation": "CNC",
   "constructeur": "moi",
   "numero de serie": "123456",
   "annee d'acquisition": "2025",
