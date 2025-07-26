@@ -137,6 +137,25 @@ def confirmDialog(message, parent=None):
     return None
 
 
+def deleteLayout(layout):
+    """
+    Recursively remove all widgets and sublayouts from the given layout, then delete the layout.
+
+    :param layout: The QLayout to clear and delete.
+    :type layout: QLayout
+    """
+    while layout.count():
+        item = layout.takeAt(0)
+
+        if item.widget():
+            item.widget().setParent(None)
+
+        elif item.layout():
+            deleteLayout(item.layout())
+
+    layout.deleteLater()  # Delete this layout once empty
+
+
 def loadUi(mainModule, className, asDialog=False):
     """load ui module related to given mainModule file path
 
