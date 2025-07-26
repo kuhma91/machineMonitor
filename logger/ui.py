@@ -17,9 +17,12 @@ from PySide2.QtCore import Qt
 
 # ==== local ===== #
 from machineMonitor.library.general.stringLib import formatString
+from machineMonitor.library.general.uiLib import scrollLayout
 from machineMonitor.logger.core import NO_MACHINE_CMD
+from machineMonitor.logger.core import AUTHORISATIONS
 from machineMonitor.logger.core import ICON_FOLDER
 from machineMonitor.logger.core import R, G, B
+from machineMonitor.logger.core import getAuthorisation
 
 # ==== global ==== #
 
@@ -162,7 +165,7 @@ class LogViewerUi(QtWidgets.QDialog):
         super(LogViewerUi, self).__init__(parent)
         self.uiName = formatString(__class__.__name__.split('Ui')[0])
 
-        self.uiWidth = 400
+        self.uiWidth = 600
         self.uiMenus = {}
         self.setupUi()
 
@@ -172,6 +175,73 @@ class LogViewerUi(QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.Dialog | QtCore.Qt.WindowTitleHint | QtCore.Qt.WindowCloseButtonHint)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
+
+        layout = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel('filter :')
+        label.setMinimumSize(self.uiWidth // 5, 20)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        layout.addWidget(label)
+
+        self.filterField = QtWidgets.QLineEdit()
+        self.filterField.setMinimumSize(((self.uiWidth // 5) * 4) - 20, 20)
+        self.filterField.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        # add completer
+        self.completer = QtWidgets.QCompleter()
+        self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)  # Display suggestions in a popup list
+        self.completer.setCaseSensitivity(Qt.CaseInsensitive)  # Make completion matching case-insensitive
+        self.filterField.setCompleter(self.completer)
+        layout.addWidget(self.filterField)
+
+        self.filterButton = QtWidgets.QPushButton('')
+        self.filterButton.setMinimumSize(20, 20)
+        self.filterButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.filterButton.setIcon(QIcon(os.path.join(ICON_FOLDER, f'add.png')))
+        self.filterButton.setToolTip('add filter')
+        layout.addWidget(self.filterButton)
+
+        self.mainLayout.addLayout(layout)
+
+        self.scorllContainer, self.scrollLayout = scrollLayout(self.mainLayout)
+        self.scorllContainer.setVisible(False)
+
+        spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.mainLayout.addItem(spacer)
+
+
+        self.tableWidget = QtWidgets.QTableWidget()
+        self.tableWidget.verticalHeader().setVisible(False)  # Hide the vertical header
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)  # Make columns stretch proportionally with the widget
+        self.tableWidget.setSortingEnabled(True)  # Enable alphabetical sorting via header clicks
+        self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)  # Disable cell editing
+        self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)  # Enable row-based selection
+        self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)  # Allow only a single row to be selected at a time
+        self.tableWidget.setMinimumSize(self.uiWidth - 20, 20)
+        self.tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+        sideButtons = AUTHORISATIONS.get(getAuthorisation(), [])
+        if sideButtons:
+            layout = QtWidgets.QHBoxLayout()
+            layout.addWidget(self.tableWidget)
+
+            sideLayout = QtWidgets.QVBoxLayout()
+            for name in sideButtons:
+                button = QtWidgets.QPushButton('')
+                button.setMinimumSize(20, 20)
+                button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+                button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
+                button.setToolTip(f'{name}')
+                sideLayout.addWidget(button)
+                self.uiMenus.setdefault('sideButtons', {})[name] = button
+
+            spacer = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+            sideLayout.addItem(spacer)
+            layout.addLayout(sideLayout)
+            self.mainLayout.addLayout(layout)
+
+        else:
+            self.mainLayout.addLayout(self.tableWidget)
+
 
 
 

@@ -161,6 +161,36 @@ class LogViewer:
     def __init__(self, asDialog=False):
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
+        self.uiMenus = self.ui.uiMenus
+
+        clearTempData()
+
+        self.storeWidget()
+        self.fillUi()
+        self.connectWidgets()
+        applyStyleSheet(self.ui, excluded=self.uiMenus.get('excluded', []))
+        self.initializeUi()
+
+    def storeWidget(self):
+        print('store widget')
+
+    def fillUi(self):
+        print('fill ui')
+
+    def connectWidgets(self):
+        print('connect widgets')
+
+    def initializeUi(self, *args):
+        if QtWidgets.QApplication.instance() is None:
+                self.app = QtWidgets.QApplication(sys.argv)
+        else:
+            self.app = QtWidgets.QApplication.instance()
+
+        if isinstance(self.ui, QtWidgets.QDialog):
+            self.ui.exec_()
+        else:
+            self.ui.show()
+
 
 if __name__ == "__main__":
-    Logger()
+    LogViewer()
