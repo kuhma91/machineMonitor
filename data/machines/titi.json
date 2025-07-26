@@ -1,9 +1,9 @@
 {
-  "secteur": "1A",
-  "utilisation": "CNC",
-  "constructeur": "moi2",
-  "numero de serie": "789101112",
-  "annee d'acquisition": "2025",
-  "en service": "Non",
+  "sector": "1A",
+  "usage": "CNC",
+  "manufacturer": "moi2",
+  "serial_number": "789101112",
+  "year_of_acquisition": "2025",
+  "in_service": "Non",
   "comment": "second essaie pour l'implementation"
 }

@@ -17,12 +17,12 @@ import os
 # ==== global ==== #
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])
 ICON_FOLDER = os.path.join(BASE_FOLDER, 'icon')
-NEEDED_INFOS = {'secteur': ['1A', '1B', '1C', '2A', '2B', '2C'],
-                'utilisation': ['CNC', 'decoupe laser', 'imprimantes 3D'],
-                'constructeur': None,
-                'numero de serie': None,
-                "annee d'acquisition": None,
-                'en service': True}
+NEEDED_INFOS = {'sector': ['1A', '1B', '1C', '2A', '2B', '2C'],
+                'usage': ['CNC', 'decoupe laser', 'imprimantes 3D'],
+                'manufacturer': None,
+                'serial_number': None,
+                "year_of_acquisition": None,
+                'in_service': True}
 MACHINE_FOLDER = os.path.join(BASE_FOLDER, 'data', 'machines')
 BUTTONS = ['edit', 'delete', 'add']
 

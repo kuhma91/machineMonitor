@@ -1,9 +1,9 @@
 {
-  "secteur": "1A",
-  "utilisation": "CNC",
-  "constructeur": "moi",
-  "numero de serie": "123456",
-  "annee d'acquisition": "2025",
-  "en service": "Oui",
+  "sector": "1A",
+  "usage": "CNC",
+  "manufacturer": "moi",
+  "serial_number": "123456",
+  "year_of_acquisition": "2025",
+  "in_service": "Oui",
   "comment": "juste un teste "
 }
