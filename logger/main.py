@@ -19,6 +19,7 @@ from PySide2.QtGui import QIcon
 
 # ==== local ===== #
 from machineMonitor.library.general.uiLib import applyStyleSheet
+from machineMonitor.library.general.uiLib import deleteLayout
 from machineMonitor.library.general.uiLib import confirmDialog
 from machineMonitor.library.general.uiLib import loadUi
 from machineMonitor.library.general.uiLib import STYLE_SHEET
@@ -29,6 +30,8 @@ from machineMonitor.logger.core import ICON_FOLDER
 from machineMonitor.logger.core import NO_MACHINE_CMD
 from machineMonitor.logger.core import saveData
 from machineMonitor.logger.core import clearTempData
+from machineMonitor.logger.core import getCompleterData
+from machineMonitor.logger.core import getTableWidgetData
 
 # ==== global ==== #
 
@@ -163,6 +166,7 @@ class LogViewer:
 
         self.uiMenus = self.ui.uiMenus
 
+        self.completionList = getCompleterData()
         clearTempData()
 
         self.storeWidget()
@@ -172,13 +176,91 @@ class LogViewer:
         self.initializeUi()
 
     def storeWidget(self):
-        print('store widget')
+        self.model = self.ui.model
+        self.filterField = self.ui.filterField
+        self.completer = self.ui.completer
+        self.popup = self.completer.popup()
+        self.filterButton = self.ui.filterButton
+        self.scorllContainer = self.ui.scorllContainer
+        self.scrollLayout = self.ui.scrollLayout
 
     def fillUi(self):
-        print('fill ui')
+        self.fillCompleter()
 
     def connectWidgets(self):
-        print('connect widgets')
+        self.filterField.textChanged.connect(self.checkEntry)
+        self.popup.clicked.connect(self.fillFieldFromCompleter)
+        self.filterButton.clicked.connect(self.addFilter)
+
+    def checkEntry(self):
+        entry = self.filterField.text()
+        if entry not in [x for v in self.completionList.values() for x in v]:
+            value = False
+        else:
+            value = True
+
+        self.filterButton.setEnabled(value)
+
+    def fillFieldFromCompleter(self, index):
+        selected = index.data()
+        self.filterField.setText(selected.split('[')[0].strip())
+
+    def addFilter(self, *args):
+        self.scorllContainer.setVisible(True)
+        entry = self.filterField.text()
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)  # Remove all margins
+        layout.setSpacing(0)  # Remove spacing between widgets
+
+        label = QtWidgets.QPushButton(entry)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        layout.addWidget(label)
+
+        button = QtWidgets.QPushButton('x')
+        button.setMinimumSize(20, 20)
+        button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        button.clicked.connect(partial(self.removeFilter, entry))
+        layout.addWidget(button)
+
+        applyStyleSheet(widgets=[label, button])
+
+        self.scrollLayout.addLayout(layout)
+        self.scrollLayout.addStretch()
+
+        self.uiMenus.setdefault('excluded', []).append(entry)
+        self.uiMenus.setdefault('filter', {})[entry] = layout
+
+        self.fillTable()
+
+    def removeFilter(self, name, *args):
+        excluded = self.uiMenus.get('excluded', [])
+        excluded.remove(name)
+        self.uiMenus['excluded'] = excluded
+
+        filters = self.uiMenus.get('filter', {})
+        layout = filters.get(name)
+        deleteLayout(layout)
+
+
+        del filters[name]
+        self.uiMenus['filter'] = filters
+
+        if not filters:
+            self.scorllContainer.setVisible(False)
+
+        self.fillTable()
+
+    def fillTable(self, *args):
+        tableData = getTableWidgetData(list(self.uiMenus.get('filter').keys()))
+        import pprint
+        pprint.pprint(tableData)
+
+
+    def fillCompleter(self, *args):
+        self.completionList = getCompleterData(excluded=self.uiMenus.get('excluded', []))
+        self.model.setStringList([])
+        self.model.setStringList([f'{x} [{k}]' for k, v in self.completionList.items() for x in v])
 
     def initializeUi(self, *args):
         if QtWidgets.QApplication.instance() is None:

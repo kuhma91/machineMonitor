@@ -15,6 +15,8 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
+from PySide2.QtWidgets import QGraphicsPolygonItem
+
 # ==== third ==== #
 
 # ==== local ===== #
@@ -24,6 +26,7 @@ from machineMonitor.library.general.infoLib import COLORS
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])
 DATA_REPO = os.path.join(BASE_FOLDER, 'data')
 LOGS_REPO = os.path.join(DATA_REPO, 'logs')
+MACHINE_REPO = os.path.join(DATA_REPO, 'machines')
 ICON_FOLDER = os.path.join(BASE_FOLDER, 'icon')
 AUTHORISATIONS = {'supervisor': ['edit', 'delete'], 'lead': ['edit']}
 LOG_TYPES = ['empty consumable & reload', 'info', 'error']
@@ -31,9 +34,10 @@ R, G, B = COLORS['yellow']
 NO_MACHINE_CMD = (f"QComboBox {{ border: 2px solid rgb({R}, {G}, {B});"
                   f"color: rgb(212, 212, 212); "
                   f"background-color: rgb(85, 85, 85)}}")
-DATE_FILE_PATTERN = r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])$'
-LOG_FILTERS = ['machineName', 'type', 'project', 'userName']
-
+DATE_FILE_PATTERN = re.compile(r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])$')
+UUID_PATTERN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.IGNORECASE)
+LOG_FILTERS = ['uuid', 'machineName', 'type', 'date', 'userName', 'numero de serie', 'constructeur', 'secteur', 'utilisation']
+EXCLUDED_KEYS = ['comment', 'file', 'timeStamp', 'manufacturer', 'sector', ]
 
 
 def clearTempData():
@@ -261,3 +265,89 @@ def saveData(data, mode='save'):
     except Exception as e:
         print(f'error while saving : {e}')
         return e
+
+
+def getAllData():
+    """
+    Retrieve and combine data from all valid log files and their associated machine files.
+
+    Iterates over files in LOGS_REPO with filenames matching UUID_PATTERN, loads each file’s JSON content,
+    then loads the corresponding machine JSON from MACHINE_REPO using the 'machineName' field.
+
+    :return: A list of dicts, each containing:
+             - 'uuid': the file’s UUID
+             - 'file': full path to the log file
+             - all fields from the log JSON
+             - all fields from the machine JSON
+    :rtype: list[dict]
+    """
+    data = []
+    for item in os.listdir(LOGS_REPO):
+        uuidValue = os.path.splitext(item)[0]
+        if not re.match(UUID_PATTERN, uuidValue):
+            continue
+
+        filePath = os.path.join(LOGS_REPO, item)
+        info = {'uuid': uuidValue, 'file': filePath}
+        with open(filePath, 'r', encoding='utf-8') as f:
+            info.update(json.load(f))
+
+        info['date'] = info['timeStamp'].split('__')[0]
+
+        machineName = info.get('machineName', None)
+        machineFile = os.path.join(MACHINE_REPO, f'{machineName}.json')
+        if os.path.exists(machineFile):
+            with open(machineFile, 'r', encoding='utf-8') as f:
+                info.update(json.load(f))
+
+        data.append(info)
+
+    return data
+
+
+def getCompleterData(excluded=None):
+    """
+    Generate completion data for specified log fields.
+
+    Iterates over all log entries, filters fields by LOG_FILTERS,
+    excludes any values in the `excluded` list, and returns unique values.
+
+    :param excluded: List of values to exclude from the results.
+    :type excluded: list or None
+
+    :return: Dict mapping each filter key to a list of unique values.
+    :rtype: dict
+    """
+    allData = getAllData()
+
+    completer = {}
+    for data in allData:
+        for k, v in data.items():
+            if k not in LOG_FILTERS:
+                continue
+
+            if excluded and v in excluded:
+                continue
+
+            completer.setdefault(k, []).append(v)
+
+    return {k: list(set(v)) for k, v in completer.items()}
+
+
+def getTableWidgetData(filters=None):
+    """
+    Retrieve table data from logs, optionally filtered by specified values.
+
+    :param filters: List of values to filter entries. If None or empty, returns all data.
+    :type filters: list or None
+
+    :return: List of data dicts matching provided filters or all data if no filters.
+    :rtype: list[dict]
+    """
+    allData = getAllData()
+    if not filters:
+        return allData
+
+    data = [i for i in allData if [v for v in i.values() if v in filters]]
+
+    return data

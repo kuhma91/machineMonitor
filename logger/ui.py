@@ -12,6 +12,7 @@ import os
 # ==== third ==== #
 from PySide2 import QtWidgets
 from PySide2 import QtCore
+from PySide2.QtCore import QStringListModel
 from PySide2.QtGui import QIcon
 from PySide2.QtCore import Qt
 
@@ -165,7 +166,7 @@ class LogViewerUi(QtWidgets.QDialog):
         super(LogViewerUi, self).__init__(parent)
         self.uiName = formatString(__class__.__name__.split('Ui')[0])
 
-        self.uiWidth = 600
+        self.uiWidth = 500
         self.uiMenus = {}
         self.setupUi()
 
@@ -178,15 +179,17 @@ class LogViewerUi(QtWidgets.QDialog):
 
         layout = QtWidgets.QHBoxLayout()
         label = QtWidgets.QLabel('filter :')
-        label.setMinimumSize(self.uiWidth // 5, 20)
+        label.setMinimumSize(self.uiWidth // 6, 20)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(label)
 
         self.filterField = QtWidgets.QLineEdit()
-        self.filterField.setMinimumSize(((self.uiWidth // 5) * 4) - 20, 20)
+        self.filterField.setMinimumSize(((self.uiWidth // 6) * 5) - 20, 20)
         self.filterField.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         # add completer
+        self.model = QStringListModel()
         self.completer = QtWidgets.QCompleter()
+        self.completer.setModel(self.model)
         self.completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)  # Display suggestions in a popup list
         self.completer.setCaseSensitivity(Qt.CaseInsensitive)  # Make completion matching case-insensitive
         self.filterField.setCompleter(self.completer)
@@ -197,6 +200,7 @@ class LogViewerUi(QtWidgets.QDialog):
         self.filterButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.filterButton.setIcon(QIcon(os.path.join(ICON_FOLDER, f'add.png')))
         self.filterButton.setToolTip('add filter')
+        self.filterButton.setEnabled(False)
         layout.addWidget(self.filterButton)
 
         self.mainLayout.addLayout(layout)
@@ -207,7 +211,6 @@ class LogViewerUi(QtWidgets.QDialog):
         spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
 
-
         self.tableWidget = QtWidgets.QTableWidget()
         self.tableWidget.verticalHeader().setVisible(False)  # Hide the vertical header
         self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)  # Make columns stretch proportionally with the widget
@@ -217,7 +220,6 @@ class LogViewerUi(QtWidgets.QDialog):
         self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)  # Allow only a single row to be selected at a time
         self.tableWidget.setMinimumSize(self.uiWidth - 20, 20)
         self.tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
 
         sideButtons = AUTHORISATIONS.get(getAuthorisation(), [])
         if sideButtons:
