@@ -34,15 +34,18 @@ from machineMonitor.logger.core import saveData
 from machineMonitor.logger.core import clearTempData
 from machineMonitor.logger.core import getCompleterData
 from machineMonitor.logger.core import getTableWidgetData
+from machineMonitor.logger.core import deleteLogs
+from machineMonitor.logger.core import getDataFromUuid
 
 # ==== global ==== #
 
 
 class Logger:
-    def __init__(self, asDialog=False):
+    def __init__(self, logUuid=None, asDialog=False):
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
         self.uiMenus = self.ui.uiMenus
+        self.logUuid = logUuid
 
         self.unfolded = False
         self.fromTemp = None
@@ -72,14 +75,24 @@ class Logger:
         self.machineBox.addItems(machines)
         self.logBox.addItems(LOG_TYPES)
 
-        filePath, data, fromError = getInitInfo()
-        if not filePath:
-            return
-
-        if not fromError:
-            choice = confirmDialog(message='temp file found ! do you want to load it ?')
-            if not choice:
+        if not self.logUuid:
+            filePath, data, fromError = getInitInfo()
+            if not filePath:
                 return
+
+            if not fromError:
+                choice = confirmDialog(message='temp file found ! do you want to load it ?')
+                if not choice:
+                    return
+
+            if fromError:
+                os.remove(filePath)
+                return
+
+            self.fromTemp = filePath
+
+        else:
+            data = getDataFromUuid(self.logUuid)
 
         self.machineBox.setCurrentText(data.get('machineName', ''))
         self.logBox.setCurrentText(data.get('type'))
@@ -87,12 +100,6 @@ class Logger:
         self.commentField.setPlainText(data.get('comment', ''))
 
         self.endButton.setEnabled(True)
-
-        if fromError:
-            os.remove(filePath)
-            return
-
-        self.fromTemp = filePath
 
     def connectWidgets(self):
         self.machineBox.currentTextChanged.connect(partial(self.changeMachineCommand))
@@ -135,7 +142,7 @@ class Logger:
             'comment': self.commentField.toPlainText()
         }
 
-        result = saveData(data, mode='temp' if not machine else 'save')
+        result = saveData(data, mode='temp' if not machine else 'save', logUuid=None if not machine else self.logUuid)
         if result:
             choice = confirmDialog(message=f'fail while saving data : {result} ! do you want to backup ?')
             if not choice:
@@ -205,9 +212,18 @@ class LogViewer:
         col = next(i for i in range(self.tableWidget.columnCount()) if self.tableWidget.horizontalHeaderItem(i).text() == 'uuid')
         return self.tableWidget.item(row, col).text()
 
-    def sideCommand(self, name, *args):
-        value = self.getUuiFromTableSelection()
-        print(f'{name} : {value}')
+    def sideCommand(self, action, *args):
+        logUuid = self.getUuiFromTableSelection()
+        if action == 'delete':
+            value = deleteLogs(logUuid)
+            if not value:
+                print(f'error deleting : {logUuid} -> {value}')
+                return
+
+        else:
+            Logger(asDialog=True, logUuid=logUuid)
+
+        self.fillUi()
 
     def onCellSelected(self, *args):
         selected = self.getUuiFromTableSelection()
@@ -323,4 +339,4 @@ class LogViewer:
 
 
 if __name__ == "__main__":
-    LogViewer()
+    Logger()

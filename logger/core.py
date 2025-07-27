@@ -55,6 +55,30 @@ def clearTempData():
             print('deleted: filePath')
 
 
+def deleteLogs(logUuid):
+    """
+    Delete the log file corresponding to the given UUID from LOGS_REPO.
+
+    :param logUuid: The UUID of the log to delete.
+    :type logUuid: str
+
+    :return: None if the file was deleted or not found, otherwise the caught Exception.
+    :rtype: None or Exception
+    """
+    relatedFile = os.path.join(LOGS_REPO, f'{logUuid}.json')
+    if not os.path.exists(relatedFile):
+        print(f'not found : {relatedFile}')
+        return None
+
+    try:
+        os.remove(relatedFile)
+        print(f'deleted : {relatedFile}')
+        return None
+
+    except Exception as e:
+        return e
+
+
 def getAuthorisation():
     """
     Retrieve the authorization level for the current OS user.
@@ -69,6 +93,47 @@ def getAuthorisation():
         return 'user'
 
     return employeesData.get(user, {}).get('authorisation', 'user')
+
+
+def getDataFromFile(filePath):
+    """
+    Load data from the given file path, handling JSON and TXT formats.
+
+    :param filePath: Path to the file to read.
+    :type filePath: str
+
+    :return: Parsed data as a dict, or an empty dict if the file does not exist or format is unsupported.
+    :rtype: dict
+    """
+    if not filePath or not os.path.exists(filePath):
+        return {}
+
+    with open(filePath, 'r', encoding='utf-8') as f:
+        if filePath.endswith('.json'):
+            return json.load(f)
+
+        if filePath.endswith('.txt'):
+            return {l.split('-')[-1].split(':')[0].strip(): l.split(':')[-1].strip() for l in f.readlines()}
+
+        return {}
+
+
+def getDataFromUuid(logsUuid):
+    """
+    Load JSON data for the given log UUID.
+
+    :param logsUuid: The UUID of the log file (without extension).
+    :type logsUuid: str
+
+    :return: Parsed JSON content as a dict, or an empty dict if the file is missing.
+    :rtype: dict
+    """
+    logsPath = os.path.join(LOGS_REPO, f'{logsUuid}.json')
+    if not os.path.exists(logsPath):
+        return {}
+
+    with open(logsUuid, 'r', encoding='utf-8') as f:
+        return json.load(f)
 
 
 def getEmployeesData():
@@ -147,29 +212,6 @@ def getInitInfo():
     return filePath, getDataFromFile(filePath), fromError
 
 
-def getDataFromFile(filePath):
-    """
-    Load data from the given file path, handling JSON and TXT formats.
-
-    :param filePath: Path to the file to read.
-    :type filePath: str
-
-    :return: Parsed data as a dict, or an empty dict if the file does not exist or format is unsupported.
-    :rtype: dict
-    """
-    if not filePath or not os.path.exists(filePath):
-        return {}
-
-    with open(filePath, 'r', encoding='utf-8') as f:
-        if filePath.endswith('.json'):
-            return json.load(f)
-
-        if filePath.endswith('.txt'):
-            return {l.split('-')[-1].split(':')[0].strip(): l.split(':')[-1].strip() for l in f.readlines()}
-
-        return {}
-
-
 def getTempData():
     """
     Collect temporary data files from the user's temp directory.
@@ -211,7 +253,8 @@ def getUUID():
     return newId
 
 
-def saveData(data, mode='save'):
+
+def saveData(data, mode='save', logUuid=None):
     """
     Save data to a file in LOGS_REPO according to the given mode.
 
@@ -228,22 +271,31 @@ def saveData(data, mode='save'):
     """
     timeStamp = datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
     userName = os.getlogin()
-    newUuid = getUUID()
 
-    data.update({'timeStamp': timeStamp, 'userName': userName})
+    if not logUuid:
+        logUuid = getUUID()
 
-    if mode == 'save':
-        filePath = os.path.join(LOGS_REPO, f'{newUuid}.json')
+        data.update({'timeStamp': timeStamp, 'userName': userName})
 
-    elif mode == 'temp':
-        filePath = os.path.join(LOGS_REPO, '.temp', userName, f'{timeStamp}.json')
+        if mode == 'save':
+            filePath = os.path.join(LOGS_REPO, f'{logUuid}.json')
 
-    elif mode == 'backup':
-        filePath = os.path.join(LOGS_REPO, '.temp', 'error', userName, f'{timeStamp}.txt')
+        elif mode == 'temp':
+            filePath = os.path.join(LOGS_REPO, '.temp', userName, f'{timeStamp}.json')
+
+        elif mode == 'backup':
+            filePath = os.path.join(LOGS_REPO, '.temp', 'error', userName, f'{timeStamp}.txt')
+
+        else:
+            print(f'unknown mode : {mode}')
+            return None
 
     else:
-        print(f'unknown mode : {mode}')
-        return
+        existingData = getDataFromUuid(logUuid)
+        existingData.update(data)
+        existingData.setdefault('modified', []).append((timeStamp, userName))
+
+        filePath = os.path.join(LOGS_REPO, f'{logUuid}.json')
 
     folder = os.path.split(filePath)[0]
     if not os.path.exists(folder):
