@@ -36,8 +36,7 @@ NO_MACHINE_CMD = (f"QComboBox {{ border: 2px solid rgb({R}, {G}, {B});"
                   f"background-color: rgb(85, 85, 85)}}")
 DATE_FILE_PATTERN = re.compile(r'^(?P<year>\d{4})_(?P<month>0[1-9]|1[0-2])_(?P<day>0[1-9]|[12]\d|3[01])$')
 UUID_PATTERN = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.IGNORECASE)
-LOG_FILTERS = ['uuid', 'machineName', 'type', 'date', 'userName', 'numero de serie', 'constructeur', 'secteur', 'utilisation']
-EXCLUDED_KEYS = ['comment', 'file', 'timeStamp', 'manufacturer', 'sector', ]
+EXCLUDED_KEYS = ['file', 'machineData', 'comment', 'timeStamp']
 
 
 def clearTempData():
@@ -323,16 +322,19 @@ def getCompleterData(excluded=None):
     completer = {}
     for data in allData:
         for k, v in data.items():
-            if k not in LOG_FILTERS:
+            if isinstance(v, dict):
+                for x, y in v.items():
+                    if excluded and y in excluded:
+                        continue
+
+                    completer.setdefault(x, []).append(y)
+
+                continue
+
+            if k in EXCLUDED_KEYS:
                 continue
 
             if excluded and v in excluded:
-                continue
-
-            if isinstance(v, dict):
-                for x, y in v.items():
-                    completer.setdefault(x, []).append(y)
-
                 continue
 
             completer.setdefault(k, []).append(v)

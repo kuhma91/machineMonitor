@@ -16,6 +16,7 @@ from functools import partial
 # ==== third ==== #
 from PySide2 import QtWidgets
 from PySide2.QtGui import QIcon
+from PySide2.QtCore import Qt
 
 # ==== local ===== #
 from machineMonitor.library.general.uiLib import applyStyleSheet
@@ -28,6 +29,7 @@ from machineMonitor.logger.core import LOG_TYPES
 from machineMonitor.logger.core import getInitInfo
 from machineMonitor.logger.core import ICON_FOLDER
 from machineMonitor.logger.core import NO_MACHINE_CMD
+from machineMonitor.logger.core import EXCLUDED_KEYS
 from machineMonitor.logger.core import saveData
 from machineMonitor.logger.core import clearTempData
 from machineMonitor.logger.core import getCompleterData
@@ -166,6 +168,7 @@ class LogViewer:
 
         self.uiMenus = self.ui.uiMenus
 
+        self.saveButton = False
         self.completionList = getCompleterData()
         clearTempData()
 
@@ -183,14 +186,34 @@ class LogViewer:
         self.filterButton = self.ui.filterButton
         self.scorllContainer = self.ui.scorllContainer
         self.scrollLayout = self.ui.scrollLayout
+        self.tableWidget = self.ui.tableWidget
 
     def fillUi(self):
         self.fillCompleter()
+        self.fillTable()
 
     def connectWidgets(self):
         self.filterField.textChanged.connect(self.checkEntry)
         self.popup.clicked.connect(self.fillFieldFromCompleter)
         self.filterButton.clicked.connect(self.addFilter)
+        self.tableWidget.cellClicked.connect(self.onCellSelected)
+        for name, button in self.uiMenus.get('sideButtons', {}).items():
+            button.clicked.connect(partial(self.sideCommand, name))
+
+    def getUuiFromTableSelection(self):
+        row = self.tableWidget.currentRow()
+        col = next(i for i in range(self.tableWidget.columnCount()) if self.tableWidget.horizontalHeaderItem(i).text() == 'uuid')
+        return self.tableWidget.item(row, col).text()
+
+    def sideCommand(self, name, *args):
+        value = self.getUuiFromTableSelection()
+        print(f'{name} : {value}')
+
+    def onCellSelected(self, *args):
+        selected = self.getUuiFromTableSelection()
+        for name, button in self.uiMenus.get('sideButtons', {}).items():
+            button.setToolTip(f'{name} : {selected}')
+            button.setEnabled(True)
 
     def checkEntry(self):
         entry = self.filterField.text()
@@ -251,11 +274,36 @@ class LogViewer:
 
         self.fillTable()
 
-    def fillTable(self, *args):
-        tableData = getTableWidgetData(list(self.uiMenus.get('filter').keys()))
-        import pprint
-        pprint.pprint(tableData)
+    def fillTable(self, startup=False, *args):
+        tableData = getTableWidgetData(list(self.uiMenus.get('filter', {}).keys()))
 
+        headers = list(set([x for info in tableData for x in info.keys() if x not in EXCLUDED_KEYS]))
+
+        self.tableWidget.clearContents()
+
+        # build header
+        self.tableWidget.setColumnCount(len(headers))
+        self.tableWidget.setHorizontalHeaderLabels(headers)
+
+        self.tableWidget.setRowCount(len(tableData))
+
+        # fill cells
+        for rowIndex, data in enumerate(tableData):
+            for columnIndex, key in enumerate(headers):
+                item = QtWidgets.QTableWidgetItem(str(data[key]))
+                item.setTextAlignment(Qt.AlignCenter)  # Center text horizontally and vertically
+                if key == 'machineName':
+                    toolTip = '\n'.join(f'{k}: {v}' for k, v in data['machineData'].items())
+                elif key == 'date':
+                    toolTip = data['timeStamp']
+                elif key == 'type':
+                    toolTip = data['comment']
+                else:
+                    toolTip = data[key]
+
+                item.setToolTip(toolTip)
+
+                self.tableWidget.setItem(rowIndex, columnIndex, item)
 
     def fillCompleter(self, *args):
         self.completionList = getCompleterData(excluded=self.uiMenus.get('excluded', []))

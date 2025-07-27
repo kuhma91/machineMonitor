@@ -166,7 +166,7 @@ class LogViewerUi(QtWidgets.QDialog):
         super(LogViewerUi, self).__init__(parent)
         self.uiName = formatString(__class__.__name__.split('Ui')[0])
 
-        self.uiWidth = 500
+        self.uiWidth = 800
         self.uiMenus = {}
         self.setupUi()
 
@@ -211,21 +211,22 @@ class LogViewerUi(QtWidgets.QDialog):
         spacer = QtWidgets.QSpacerItem(self.uiWidth, 15, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.mainLayout.addItem(spacer)
 
+        layout = QtWidgets.QHBoxLayout()
         self.tableWidget = QtWidgets.QTableWidget()
         self.tableWidget.verticalHeader().setVisible(False)  # Hide the vertical header
         self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)  # Make columns stretch proportionally with the widget
+        # self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Interactive)  # Allow the user to drag‑resize columns
+        self.tableWidget.horizontalHeader().setFixedHeight(30)
         self.tableWidget.setSortingEnabled(True)  # Enable alphabetical sorting via header clicks
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)  # Disable cell editing
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)  # Enable row-based selection
         self.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)  # Allow only a single row to be selected at a time
-        self.tableWidget.setMinimumSize(self.uiWidth - 20, 20)
+        self.tableWidget.setMinimumSize(((self.uiWidth // 3) * 2) - 20, 20)
         self.tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        layout.addWidget(self.tableWidget)
 
         sideButtons = AUTHORISATIONS.get(getAuthorisation(), [])
         if sideButtons:
-            layout = QtWidgets.QHBoxLayout()
-            layout.addWidget(self.tableWidget)
-
             sideLayout = QtWidgets.QVBoxLayout()
             for name in sideButtons:
                 button = QtWidgets.QPushButton('')
@@ -233,17 +234,31 @@ class LogViewerUi(QtWidgets.QDialog):
                 button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
                 button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'{name}.png')))
                 button.setToolTip(f'{name}')
+                button.setEnabled(False)
                 sideLayout.addWidget(button)
                 self.uiMenus.setdefault('sideButtons', {})[name] = button
 
             spacer = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
             sideLayout.addItem(spacer)
             layout.addLayout(sideLayout)
-            self.mainLayout.addLayout(layout)
 
-        else:
-            self.mainLayout.addLayout(self.tableWidget)
+        self.mainLayout.addLayout(layout)
 
 
+        container = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(container)
+
+        spacer = QtWidgets.QSpacerItem((self.uiWidth // 5) * 4, 10, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        layout.addItem(spacer)
+
+        button = QtWidgets.QPushButton('   save')
+        button.setMinimumSize(self.uiWidth // 5, 20)
+        button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'save.png')))
+        layout.addWidget(button)
+
+        container.setVisible(False)
+
+        self.mainLayout.addWidget(container)
 
 
