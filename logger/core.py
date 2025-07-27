@@ -295,7 +295,7 @@ def saveData(data, mode='save', logUuid=None):
     else:
         existingData = getDataFromUuid(logUuid)
         existingData.update(data)
-        existingData.setdefault('modified', []).append((timeStamp, userName))
+        existingData.setdefault('modified', []).append([timeStamp, userName])
 
         filePath = os.path.join(LOGS_REPO, f'{logUuid}.json')
 

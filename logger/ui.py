@@ -245,20 +245,3 @@ class LogViewerUi(QtWidgets.QDialog):
         self.mainLayout.addLayout(layout)
 
 
-        container = QtWidgets.QWidget()
-        layout = QtWidgets.QHBoxLayout(container)
-
-        spacer = QtWidgets.QSpacerItem((self.uiWidth // 5) * 4, 10, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        layout.addItem(spacer)
-
-        button = QtWidgets.QPushButton('   save')
-        button.setMinimumSize(self.uiWidth // 5, 20)
-        button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        button.setIcon(QIcon(os.path.join(ICON_FOLDER, f'save.png')))
-        layout.addWidget(button)
-
-        container.setVisible(False)
-
-        self.mainLayout.addWidget(container)
-
-

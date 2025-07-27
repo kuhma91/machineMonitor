@@ -215,6 +215,10 @@ class LogViewer:
     def sideCommand(self, action, *args):
         logUuid = self.getUuiFromTableSelection()
         if action == 'delete':
+            choice = confirmDialog(f'are you sure you wante to delete: {logUuid} ?')
+            if not choice:
+                return
+
             value = deleteLogs(logUuid)
             if not value:
                 print(f'error deleting : {logUuid} -> {value}')
@@ -314,6 +318,8 @@ class LogViewer:
                     toolTip = data['timeStamp']
                 elif key == 'type':
                     toolTip = data['comment']
+                elif key == 'modified':
+                    toolTip = '\n'.join('modified by: {0} at: {1}'.format(*x) for x in data[key])
                 else:
                     toolTip = data[key]
 
