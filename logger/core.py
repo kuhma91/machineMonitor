@@ -298,7 +298,7 @@ def getAllData():
         machineFile = os.path.join(MACHINE_REPO, f'{machineName}.json')
         if os.path.exists(machineFile):
             with open(machineFile, 'r', encoding='utf-8') as f:
-                info.update(json.load(f))
+                info['machineData'] = json.load(f)
 
         data.append(info)
 
@@ -329,6 +329,12 @@ def getCompleterData(excluded=None):
             if excluded and v in excluded:
                 continue
 
+            if isinstance(v, dict):
+                for x, y in v.items():
+                    completer.setdefault(x, []).append(y)
+
+                continue
+
             completer.setdefault(k, []).append(v)
 
     return {k: list(set(v)) for k, v in completer.items()}
@@ -348,6 +354,21 @@ def getTableWidgetData(filters=None):
     if not filters:
         return allData
 
-    data = [i for i in allData if [v for v in i.values() if v in filters]]
+    data = []
+    for info in allData:
+        for k, v in info.items():
+            if not isinstance(v, dict):
+                if v not in filters:
+                    continue
+
+                data.append(info)
+                continue
+
+            for x, y in v.items():
+                if y not in filters:
+                    continue
+
+                data.append(info)
+                continue
 
     return data
