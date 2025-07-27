@@ -253,20 +253,22 @@ def getUUID():
     return newId
 
 
-
 def saveData(data, mode='save', logUuid=None):
     """
-    Save data to a file in LOGS_REPO according to the given mode.
+    Save or update log data in LOGS_REPO according to mode and logUuid.
 
     :param data: The dictionary to serialize and save.
     :type data: dict
     :param mode:
-        - 'save'   → write a new UUID-named JSON in LOGS_REPO
-        - 'temp'   → write a timestamped JSON under .temp/<username>/
-        - 'backup' → write a timestamped TXT under .temp/error/<username>/
-        Any other value prints an error and does nothing.
+        - 'save'   → create a new JSON log with a generated UUID
+        - 'temp'   → create a timestamped JSON under .temp/<username>/
+        - 'backup' → create a timestamped TXT under .temp/error/<username>/
+        Any other value prints an error and returns None.
     :type mode: str
-    :return: None if successful or mode unknown, otherwise returns the caught Exception.
+    :param logUuid: If provided, update the existing JSON log; otherwise generate a new UUID.
+    :type logUuid: str or None
+
+    :return: None if successful or mode unknown, otherwise the caught Exception.
     :rtype: None or Exception
     """
     timeStamp = datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
