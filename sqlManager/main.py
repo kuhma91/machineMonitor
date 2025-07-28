@@ -77,6 +77,7 @@ def syncDB():
                         boolValue = [k for k, v in BOOLEAN_CONVERTER.items() if value.lower() in v]
                         if not boolValue:
                             raise ValueError(f"can't convert : {value} as boolean")
+
                         toInsert[key] = min(boolValue)
                         continue
 
