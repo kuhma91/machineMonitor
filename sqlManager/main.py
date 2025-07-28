@@ -27,8 +27,19 @@ BOOLEAN_CONVERTER = {True: ['oui', 'o', 'yes', 'y', 'true'], False: ['non', 'n',
 MATCHING_TYPES = {'TEXT': str, 'BOOLEAN': bool, 'INTEGER': int}
 
 
-
 def syncDB():
+    """
+    Synchronize local JSON data files into the SQLite database.
+
+    Iterates over each table in REPOS, loads corresponding JSON files,
+    converts their fields to the appropriate types, and inserts or updates
+    records via `updateDb`.
+
+    Raises
+    ------
+    ValueError
+        If a required field is missing or cannot be converted to the expected type.
+    """
     for tableName, folder in REPOS.items():
         relatedDBInfo = getRelatedSQLInfo(DB_PATH, tableName)
         if not relatedDBInfo:
@@ -56,8 +67,7 @@ def syncDB():
                         if info[3] != 1:
                             continue
 
-                        print(f'missing {info[1]} in : {filePath}')
-                        return
+                        raise ValueError(f'missing {info[1]} in : {filePath}')
 
                     if isinstance(value, MATCHING_TYPES[info[2]]):
                        toInsert[key] = value
@@ -66,14 +76,11 @@ def syncDB():
                     if info[2] == 'BOOLEAN':
                         boolValue = [k for k, v in BOOLEAN_CONVERTER.items() if value.lower() in v]
                         if not boolValue:
-                            print(f"can't convert : {value} as boolean")
-                            return
-
+                            raise ValueError(f"can't convert : {value} as boolean")
                         toInsert[key] = min(boolValue)
                         continue
 
                     finalValue = MATCHING_TYPES[info[2]](value)
                     toInsert[key] = finalValue
 
-                    updateDb(DB_PATH, tableName, shortName, toInsert)
-
+                updateDb(DB_PATH, tableName, shortName, toInsert)

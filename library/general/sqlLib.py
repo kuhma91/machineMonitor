@@ -23,80 +23,78 @@ def getRelatedSQLInfo(dbPath, tableName):
     Parameters
     ----------
     dbPath : str
-        Filesystem path to the SQLite database file.
+        Path to the SQLite database file.
     tableName : str
         Name of the table whose schema information to retrieve.
 
     Returns
     -------
-    list of tuple or None
-        If the table exists:
-            Returns a list of column metadata tuples:
-            (cid, name, type, notnull, dflt_value, pk)
-        If the table does not exist:
-            Prints a warning and returns None.
+    list of tuple
+        Column metadata tuples for each column:
+        (cid, name, type, notnull, dflt_value, pk).
+        Empty list if the table does not exist.
 
     Notes
     -----
-    - Verifies table existence by calling `isTableExists` first.
+    - Checks for table existence via `isTableExists`.
     - Uses `PRAGMA table_info` to fetch column definitions.
-    - Closes the database connection after querying.
+    - Connection is automatically closed.
     """
     if not isTableExists(dbPath, tableName):
         print(f'{tableName} not found in : {dbPath}')
-        return None
+        return {}
 
-    conn = sqlite3.connect(dbPath)  # connect to SQL DB
-    cursor = conn.cursor()  # to get access to operations related to SQL DB
-    cursor.execute(f"PRAGMA table_info({tableName});")
-    return cursor.fetchall()
+    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
+        cursor = conn.cursor()  # to get access to operations related to SQL DB
+        cursor.execute(f"PRAGMA table_info({tableName});")
+        return cursor.fetchall()
 
 
 def isTableExists(dbPath, tableName):
     """
-    Check if a table with the specified name exists in the given SQLite database file.
+    Check whether a table exists in the SQLite database file.
 
     Parameters
     ----------
     dbPath : str
-        Filesystem path to the SQLite database file.
+        Path to the SQLite database file.
     tableName : str
-        Name of the table to check for existence.
+        Name of the table to check.
 
     Returns
     -------
     bool
-        True if the table exists in the database, False otherwise.
+        True if the table exists, False otherwise.
 
     Notes
     -----
-    - Opens a new connection for each check to avoid side effects.
-    - Uses the internal `sqlite_master` table to query the database schema.
-    - Employs parameterized queries to prevent SQL injection.
+    - Queries the internal `sqlite_master` table to inspect schema.
+    - Uses a parameterized query to prevent SQL injection.
+    - Connection is automatically closed.
     """
-    conn = sqlite3.connect(dbPath)  # connect to SQL DB
-    cursor = conn.cursor()  # to get access to operations related to SQL DB
+    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
+        cursor = conn.cursor()  # to get access to operations related to SQL DB
 
-    # Verify table exists
-    cursor.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?;",  # sqlite_master = intern table that repo all DB objects
-        (tableName, )
-    )
-    return cursor.fetchone() is not None
+        # Verify table exists
+        cursor.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?;",  # sqlite_master = intern table that repo all DB objects
+            (tableName, )
+        )
+        return cursor.fetchone() is not None
 
 
 def isEntryExists(dbPath, tableName, primaryKey):
     """
-    Check if an entry with the specified primary key exists in the given table.
+    Determine if a specific row exists in a table by primary key.
 
     Parameters
     ----------
     dbPath : str
-        Filesystem path to the SQLite database file.
-    tableType : str
-        Name of the table to query (e.g., 'machines' or 'logs').
-    primaryKey : str
-        Value of the primary key to look up in the table.
+        Path to the SQLite database file.
+    tableName : str
+        Name of the table to query.
+    primaryKey : any
+        Value of the primary key to check for.
 
     Returns
     -------
@@ -105,85 +103,99 @@ def isEntryExists(dbPath, tableName, primaryKey):
 
     Notes
     -----
-    - Opens a new connection for each check to avoid persistent cursors.
+    - Chooses 'name' for 'machines' and 'uuid' for 'logs' as PK column names.
     - Uses parameterized queries to safeguard against SQL injection.
-    - Assumes the primary key column is named 'name' for 'machines'
-      and 'uuid' for 'logs'; adapt as needed for other tables.
+    - Connection is automatically closed.
     """
-    conn = sqlite3.connect(dbPath)  # connect to SQL DB
-    cursor = conn.cursor()  # to get access to operations related to SQL DB
-    cursor.execute(f"SELECT 1 FROM {tableName} WHERE name = ?;", (primaryKey,))
-    return cursor.fetchone() is not None
+    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
+        cursor = conn.cursor()  # to get access to operations related to SQL DB
+        cursor.execute(f"SELECT 1 FROM {tableName} WHERE name = ?;", (primaryKey,))
+        return cursor.fetchone() is not None
 
 
 def getRowAsDict(dbPath, tableName, primaryKey):
     """
-    Retrieve a single row from the specified table as a dictionary.
+    Fetch a single row as a dictionary mapping column names to values.
 
     Parameters
     ----------
     dbPath : str
-        Filesystem path to the SQLite database file.
+        Path to the SQLite database file.
     tableName : str
-        Name of the table to query from.
+        Name of the table to query.
     primaryKey : any
         Value of the primary key for the row to retrieve.
 
     Returns
     -------
     dict
-        A dictionary mapping column names to their corresponding values
-        for the matched row. Returns an empty dict if no matching row is found.
+        A dict of column:value for the matched row, or an empty dict if not found.
 
     Notes
     -----
-    - Uses `getPrimaryKeyValue` to determine the primary key column name dynamically.
-    - Executes a parameterized query to avoid SQL injection.
-    - Closes the database connection after retrieval.
+    - Determines the PK column dynamically via `getPrimaryKeyValue`.
+    - Executes a parameterized SELECT to prevent SQL injection.
+    - Connection is automatically closed.
     """
-    conn = sqlite3.connect(dbPath)  # connect to SQL DB
-    cursor = conn.cursor()  # to get access to operations related to SQL DB
+    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
+        cursor = conn.cursor()  # to get access to operations related to SQL DB
 
-    primaryColumn = getPrimaryKeyValue(dbPath,tableName)
-    cursor.execute(f"SELECT * FROM {tableName} WHERE {primaryColumn} = ?;", (primaryKey,))  # get row which primary key matches given primary key
-    row = cursor.fetchone()
+        primaryColumn = getPrimaryKeyValue(dbPath, tableName)
+        if not primaryColumn:
+            print(f'no primaryColumn found in : {dbPath} -> {tableName}')
+            return {}
 
-    columns = [description[0] for description in cursor.description]  # get columns name
+        cursor.execute(f"SELECT * FROM {tableName} WHERE {primaryColumn} = ?;", (primaryKey,))  # get row which primary key matches given primary key
+        row = cursor.fetchone()
 
-    result = dict(zip(columns, row))  # build dict
-    conn.close()
-    return result
+        columns = [description[0] for description in cursor.description]  # get columns name
+
+        result = dict(zip(columns, row))  # build dict
+        conn.close()
+        return result
 
 
 def getPrimaryKeyValue(dbPath, tableName):
     """
-    Identify the name of the primary key column for the given table.
+    Identify the primary key column name for a given table.
 
     Parameters
     ----------
     dbPath : str
-        Filesystem path to the SQLite database file.
+        Path to the SQLite database file.
     tableName : str
-        Name of the table whose primary key column is to be determined.
+        Name of the table whose PK column is to be found.
 
     Returns
     -------
-    str or None
-        The column name that is designated as the primary key, or None if not found.
+    str
+        The PK column name.
+
+    Raises
+    ------
+    ValueError
+        If the table has zero or multiple PK columns.
 
     Notes
     -----
-    - Uses `getRelatedSQLInfo` to fetch schema info and filter the column with pk flag.
-    - Assumes exactly one primary key column exists per table.
-    - Closes the database connection used for schema inspection.
+    - Parses schema info from `getRelatedSQLInfo`.
+    - Expects exactly one column flagged as PK.
+    - Connection is closed automatically by context manager.
     """
     sqlInfo = getRelatedSQLInfo(dbPath, tableName)
-    return min([x[1] for x in sqlInfo if x[-1] == 1])  # get primary key column name
+    if not sqlInfo:
+        return None
+
+    primaryKeyValues = [x[1] for x in sqlInfo if x[-1] == 1]  # get primary key column name
+    if not primaryKeyValues:
+        raise f'not PK found in : {dbPath} -> {tableName}'
+
+    return min(primaryKeyValues)
 
 
 def updateDb(dbPath, tableName, primaryKey, data):
     """
-    Insert or update a row in the given table based on whether the primary key exists.
+    Insert or update a row in the specified table based on its primary key.
 
     Parameters
     ----------
@@ -191,26 +203,21 @@ def updateDb(dbPath, tableName, primaryKey, data):
         Path to the SQLite database file.
     tableName : str
         Name of the table to modify.
-    primaryKey : str
-        Value of the table’s primary‑key column for this record.
+    primaryKey : any
+        Value of the primary key for the target row.
     data : dict
-        Mapping column_name → new_value for all fields you wish to insert or update.
+        Mapping of column names to new values for insert or update.
 
     Behavior
     --------
-    1. Si l’entrée n’existe pas (selon `isEntryExists`), on fait un INSERT :
-       - On compile la liste des colonnes et des placeholders `?` automatiquement.
-    2. Sinon, on :
-       a. Récupère les valeurs actuelles (`get_row_as_dict` ou ton `getValues`).
-       b. Calcule `toUpdate` : les paires (col, val) où `data[col] != current[col]`.
-       c. Pour chaque colonne à mettre à jour, on exécute un UPDATE ciblé.
+    - If the entry does not exist, performs an INSERT of all provided data.
+    - If the entry exists, performs UPDATEs for only changed columns.
 
     Notes
     -----
-    - Chaque UPDATE utilise un SQL de la forme
-      `UPDATE tableName SET col = ? WHERE pk_col = ?;`
-    - On commit après chaque modification pour que ce soit immédiatement persistant.
-    - Pense à fermer la connexion à la fin.
+    - Uses `isEntryExists` to check existence.
+    - Commits once at the end; rolls back on error.
+    - Connection is automatically closed.
     """
     conn = sqlite3.connect(dbPath)  # connect to SQL DB
     cursor = conn.cursor()  # to get access to operations related to SQL DB
@@ -224,14 +231,27 @@ def updateDb(dbPath, tableName, primaryKey, data):
 
     else:
         primaryColumn = getPrimaryKeyValue(dbPath, tableName)
+        if not primaryColumn:
+            raise f'{primaryKey} even exists in {dbPath} -> {tableName}\n\nbut no primaryKey found in table'
+
         currentData = getRowAsDict(dbPath, tableName, primaryKey)
+        if not currentData:
+            raise f'no data found in : {dbPath} -> {tableName} -> {primaryKey}'
+
         toUpdate = {column: value for column, value in data.items() if currentData[column] != value}
         for columns, value in toUpdate.items():
-            sqlCmd = (f"UPDATE {tableName}"  # table to modify
-                      f"SET {columns} = ?"  # columns to update
-                      f"WHERE {primaryColumn} = ?")  # term that target the only line to update
+            sqlCmd = (f"UPDATE {tableName} "  # table to modify
+                      f"SET {columns} = ? "  # columns to update
+                      f"WHERE {primaryColumn} = ? ")  # term that target the only line to update
 
             cursor.execute(sqlCmd, (value, primaryKey))
-            conn.commit()
+    try:
+        print(f'{dbPath} -> {tableName} -> {primaryKey} updated')
+        conn.commit()
 
-    conn.close()
+    except Exception as e:
+        print(f'fail to update {dbPath} -> {tableName} -> {primaryKey} : {e}')
+        conn.rollback()
+
+    finally:
+        conn.close()
