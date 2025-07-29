@@ -28,12 +28,6 @@ DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_TYPES = {'machines': Machine, 'logs': Log}
 
 
-@app.get("/")  # HTTP GET = request to use root to call function right under the decorator
-def read_root():
-    # return a simple JSON response
-    return {"msg": "OK"}
-
-
 def getInfo(dataType, filters=None):
     """
     Retrieve records from a DB table and apply optional filters.
@@ -77,6 +71,12 @@ def getInfo(dataType, filters=None):
         result.append(record)
 
     return result
+
+
+@app.get("/", summary="Read root")  # HTTP GET = request to use root to call function right under the decorator
+def read_root():
+    # return a simple JSON response
+    return {"msg": "OK"}
 
 
 @app.get("/machines", response_model=list[Machine], summary="List all machines",)
