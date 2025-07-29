@@ -34,7 +34,8 @@ def getPrimaryKeyValue(dbPath, tableName):
 
     primaryKeyValues = [x[1] for x in sqlInfo if x[-1] == 1]  # get primary key column name
     if not primaryKeyValues:
-        raise f'not PK found in : {dbPath} -> {tableName}'
+        print(f'not PK found in : {dbPath} -> {tableName}')
+        return None
 
     return min(primaryKeyValues)
 
@@ -91,6 +92,23 @@ def getRowAsDict(dbPath, tableName, primaryKey):
 
         result = dict(zip(columns, row))  # build dict
         return result
+
+
+def getTableFromDb(dbPath):
+    """
+    Return a list of all table names in the SQLite database.
+
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+
+    :return: existing table from db
+    :rtype: list[str]
+    """
+    # Open a connection (auto‑closed)
+    with sqlite3.connect(dbPath) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")  # Query the internal sqlite_master table for all tables
+        return [row[0] for row in cursor.fetchall()]  # Fetch all rows, each row is a tuple (table_name,)
 
 
 def isEntryExists(dbPath, tableName, primaryKey):

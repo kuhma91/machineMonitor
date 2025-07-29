@@ -1,0 +1,39 @@
+"""
+===============================================================================
+fileName: models.py
+scripter: angiu
+creation date: 29/07/2025
+description:
+    Pydantic valide et convertit automatiquement les données entrantes/sortantes.
+    Pour que FastAPI sache à quoi s’attendre dans le corps des requêtes POST/PUT, et comment renvoyer les objets en JSON.
+    Ça génère aussi la documentation interactive (/docs) avec les schémas JSON.
+===============================================================================
+"""
+# ==== native ==== #
+
+# ==== third ==== #
+from pydantic import BaseModel
+
+# ==== local ===== #
+
+# ==== global ==== #
+
+
+class Machine(BaseModel):
+    name: str
+    sector: str
+    serial_number: str
+    year_of_acquisition: int
+    in_service: bool
+    comment: str | None = None
+
+
+class Log(BaseModel):
+    uuid: str
+    machineName: str
+    type: str
+    project: str
+    timeStamp: str
+    userName: str
+    comment: str | None = None
+    modifications: list[tuple[str,str]] | None = None
