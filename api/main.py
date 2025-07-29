@@ -79,8 +79,8 @@ def getInfo(dataType, filters=None):
     return result
 
 
-@app.get("/machines", response_model=list[Machine])
-def getMachines():
+@app.get("/machines", response_model=list[Machine], summary="List all machines",)
+def listMachines():
     """
     Retrieve the list of all machines.
 
@@ -91,7 +91,7 @@ def getMachines():
     return [Machine(**r) for r in records]
 
 
-@app.get("/machines/{name}", response_model=Machine)
+@app.get("/machines/{name}", response_model=Machine, summary="Get one machine by name")
 def getMachine(name):
     """
     Retrieve a single machine by its name.
@@ -108,8 +108,8 @@ def getMachine(name):
     return Machine(**records[0])
 
 
-@app.get("/logs", response_model=list[Log])
-def getLogs():
+@app.get("/logs", response_model=list[Log], summary="List all logs")
+def listLogs():
     """
     Retrieve all logs.
 
@@ -120,7 +120,7 @@ def getLogs():
     return [Log(**r) for r in records]
 
 
-@app.get("/logs/{uuid}", response_model=Log)
+@app.get("/logs/{uuid}", response_model=Log, summary="Get one log by UUID")
 def getLog(uuid):
     """
     Retrieve a single log by its UUID.
