@@ -10,7 +10,6 @@ description:
 import os
 
 # ==== third ==== #
-from fastapi import FastAPI
 import sqlite3
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -22,6 +21,8 @@ from machineMonitor.library.general.sqlLib import getTableFromDb
 from machineMonitor.library.general.sqlLib import getPrimaryKeyValue
 
 # ==== global ==== #
+print(f"🔍 Loading FastAPI app from: {__file__}")
+
 app = FastAPI()  # lowerCase -> conventional
 PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
@@ -135,3 +136,5 @@ def getLog(uuid):
     if not records:
         raise HTTPException(status_code=404, detail="Log not found")
     return Log(**records[0])
+
+print("📦 Registered routes →", [route.path for route in app.routes])
