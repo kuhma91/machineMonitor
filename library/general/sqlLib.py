@@ -16,6 +16,29 @@ import sqlite3
 # ==== global ==== #
 
 
+def getPrimaryKeyValue(dbPath, tableName):
+    """
+    Identify the primary key column name for a given table.
+
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table to query.
+    :type tableName: str
+
+    :return: The PK column name or If the table has zero or multiple PK columns.
+    :rtype: str or ValueError
+    """
+    sqlInfo = getRelatedSQLInfo(dbPath, tableName)
+    if not sqlInfo:
+        return None
+
+    primaryKeyValues = [x[1] for x in sqlInfo if x[-1] == 1]  # get primary key column name
+    if not primaryKeyValues:
+        raise f'not PK found in : {dbPath} -> {tableName}'
+
+    return min(primaryKeyValues)
+
+
 def getRelatedSQLInfo(dbPath, tableName):
     """
     Retrieve detailed schema information for a specific table in the SQLite database.
@@ -37,53 +60,6 @@ def getRelatedSQLInfo(dbPath, tableName):
         cursor = conn.cursor()  # to get access to operations related to SQL DB
         cursor.execute(f"PRAGMA table_info({tableName});")
         return cursor.fetchall()
-
-
-def isTableExists(dbPath, tableName):
-    """
-    Check whether a table exists in the SQLite database file.
-
-    :param dbPath: Path to the SQLite database file.
-    :type dbPath : str
-    :param tableName: Name of the table to check.
-    :type tableName: str
-
-    :return: True if the table exists, False otherwise.
-    :rtype: bool
-    """
-    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
-        cursor = conn.cursor()  # to get access to operations related to SQL DB
-
-        # Verify table exists
-        cursor.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?;",  # sqlite_master = intern table that repo all DB objects
-            (tableName, )
-        )
-        return cursor.fetchone() is not None
-
-
-def isEntryExists(dbPath, tableName, primaryKey):
-    """
-    Determine if a specific row exists in a table by primary key.
-
-    :param dbPath: Path to the SQLite database file.
-    :type dbPath: str
-    :param tableName: Name of the table to query.
-    :type tableName: str
-    :param primaryKey: Value of the primary key to check for.
-    :type primaryKey: any
-
-    :return: True if a matching row is found, False otherwise.
-    :rtype: bool
-    """
-    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
-        cursor = conn.cursor()  # to get access to operations related to SQL DB
-        primaryKeyColumn = getPrimaryKeyValue(dbPath, tableName)  # Dynamically fetch the name of the primary key column
-        if not primaryKeyColumn:
-            return False
-
-        cursor.execute(f"SELECT 1 FROM {tableName} WHERE {primaryKeyColumn} = ?;", (primaryKey,))
-        return cursor.fetchone() is not None
 
 
 def getRowAsDict(dbPath, tableName, primaryKey):
@@ -117,27 +93,51 @@ def getRowAsDict(dbPath, tableName, primaryKey):
         return result
 
 
-def getPrimaryKeyValue(dbPath, tableName):
+def isEntryExists(dbPath, tableName, primaryKey):
     """
-    Identify the primary key column name for a given table.
+    Determine if a specific row exists in a table by primary key.
 
     :param dbPath: Path to the SQLite database file.
     :type dbPath: str
     :param tableName: Name of the table to query.
     :type tableName: str
+    :param primaryKey: Value of the primary key to check for.
+    :type primaryKey: any
 
-    :return: The PK column name or If the table has zero or multiple PK columns.
-    :rtype: str or ValueError
+    :return: True if a matching row is found, False otherwise.
+    :rtype: bool
     """
-    sqlInfo = getRelatedSQLInfo(dbPath, tableName)
-    if not sqlInfo:
-        return None
+    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
+        cursor = conn.cursor()  # to get access to operations related to SQL DB
+        primaryKeyColumn = getPrimaryKeyValue(dbPath, tableName)  # Dynamically fetch the name of the primary key column
+        if not primaryKeyColumn:
+            return False
 
-    primaryKeyValues = [x[1] for x in sqlInfo if x[-1] == 1]  # get primary key column name
-    if not primaryKeyValues:
-        raise f'not PK found in : {dbPath} -> {tableName}'
+        cursor.execute(f"SELECT 1 FROM {tableName} WHERE {primaryKeyColumn} = ?;", (primaryKey,))
+        return cursor.fetchone() is not None
 
-    return min(primaryKeyValues)
+
+def isTableExists(dbPath, tableName):
+    """
+    Check whether a table exists in the SQLite database file.
+
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath : str
+    :param tableName: Name of the table to check.
+    :type tableName: str
+
+    :return: True if the table exists, False otherwise.
+    :rtype: bool
+    """
+    with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
+        cursor = conn.cursor()  # to get access to operations related to SQL DB
+
+        # Verify table exists
+        cursor.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?;",  # sqlite_master = intern table that repo all DB objects
+            (tableName, )
+        )
+        return cursor.fetchone() is not None
 
 
 def updateDb(dbPath, tableName, primaryKey, data):
