@@ -20,25 +20,14 @@ def getRelatedSQLInfo(dbPath, tableName):
     """
     Retrieve detailed schema information for a specific table in the SQLite database.
 
-    Parameters
-    ----------
-    dbPath : str
-        Path to the SQLite database file.
-    tableName : str
-        Name of the table whose schema information to retrieve.
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table whose schema information to retrieve.
+    :type tableName: str
 
-    Returns
-    -------
-    list of tuple
-        Column metadata tuples for each column:
-        (cid, name, type, notnull, dflt_value, pk).
-        Empty list if the table does not exist.
-
-    Notes
-    -----
-    - Checks for table existence via `isTableExists`.
-    - Uses `PRAGMA table_info` to fetch column definitions.
-    - Connection is automatically closed.
+    :return: Column metadata tuples for each column: (cid, name, type, notnull, dflt_value, pk).
+             Empty list if the table does not exist.
+    :rtype: list of tuple
     """
     if not isTableExists(dbPath, tableName):
         print(f'{tableName} not found in : {dbPath}')
@@ -54,23 +43,13 @@ def isTableExists(dbPath, tableName):
     """
     Check whether a table exists in the SQLite database file.
 
-    Parameters
-    ----------
-    dbPath : str
-        Path to the SQLite database file.
-    tableName : str
-        Name of the table to check.
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath : str
+    :param tableName: Name of the table to check.
+    :type tableName: str
 
-    Returns
-    -------
-    bool
-        True if the table exists, False otherwise.
-
-    Notes
-    -----
-    - Queries the internal `sqlite_master` table to inspect schema.
-    - Uses a parameterized query to prevent SQL injection.
-    - Connection is automatically closed.
+    :return: True if the table exists, False otherwise.
+    :rtype: bool
     """
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
         cursor = conn.cursor()  # to get access to operations related to SQL DB
@@ -87,25 +66,15 @@ def isEntryExists(dbPath, tableName, primaryKey):
     """
     Determine if a specific row exists in a table by primary key.
 
-    Parameters
-    ----------
-    dbPath : str
-        Path to the SQLite database file.
-    tableName : str
-        Name of the table to query.
-    primaryKey : any
-        Value of the primary key to check for.
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table to query.
+    :type tableName: str
+    :param primaryKey: Value of the primary key to check for.
+    :type primaryKey: any
 
-    Returns
-    -------
-    bool
-        True if a matching row is found, False otherwise.
-
-    Notes
-    -----
-    - Chooses 'name' for 'machines' and 'uuid' for 'logs' as PK column names.
-    - Uses parameterized queries to safeguard against SQL injection.
-    - Connection is automatically closed.
+    :return: True if a matching row is found, False otherwise.
+    :rtype: bool
     """
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
         cursor = conn.cursor()  # to get access to operations related to SQL DB
@@ -121,25 +90,15 @@ def getRowAsDict(dbPath, tableName, primaryKey):
     """
     Fetch a single row as a dictionary mapping column names to values.
 
-    Parameters
-    ----------
-    dbPath : str
-        Path to the SQLite database file.
-    tableName : str
-        Name of the table to query.
-    primaryKey : any
-        Value of the primary key for the row to retrieve.
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table to query.
+    :type tableName: str
+    :param primaryKey: Value of the primary key to check for.
+    :type primaryKey: any
 
-    Returns
-    -------
-    dict
-        A dict of column:value for the matched row, or an empty dict if not found.
-
-    Notes
-    -----
-    - Determines the PK column dynamically via `getPrimaryKeyValue`.
-    - Executes a parameterized SELECT to prevent SQL injection.
-    - Connection is automatically closed.
+    :return: A dict of column:value for the matched row, or an empty dict if not found.
+    :rtype: dict
     """
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
         cursor = conn.cursor()  # to get access to operations related to SQL DB
@@ -162,28 +121,13 @@ def getPrimaryKeyValue(dbPath, tableName):
     """
     Identify the primary key column name for a given table.
 
-    Parameters
-    ----------
-    dbPath : str
-        Path to the SQLite database file.
-    tableName : str
-        Name of the table whose PK column is to be found.
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table to query.
+    :type tableName: str
 
-    Returns
-    -------
-    str
-        The PK column name.
-
-    Raises
-    ------
-    ValueError
-        If the table has zero or multiple PK columns.
-
-    Notes
-    -----
-    - Parses schema info from `getRelatedSQLInfo`.
-    - Expects exactly one column flagged as PK.
-    - Connection is closed automatically by context manager.
+    :return: The PK column name or If the table has zero or multiple PK columns.
+    :rtype: str or ValueError
     """
     sqlInfo = getRelatedSQLInfo(dbPath, tableName)
     if not sqlInfo:
@@ -200,27 +144,14 @@ def updateDb(dbPath, tableName, primaryKey, data):
     """
     Insert or update a row in the specified table based on its primary key.
 
-    Parameters
-    ----------
-    dbPath : str
-        Path to the SQLite database file.
-    tableName : str
-        Name of the table to modify.
-    primaryKey : any
-        Value of the primary key for the target row.
-    data : dict
-        Mapping of column names to new values for insert or update.
-
-    Behavior
-    --------
-    - If the entry does not exist, performs an INSERT of all provided data.
-    - If the entry exists, performs UPDATEs for only changed columns.
-
-    Notes
-    -----
-    - Uses `isEntryExists` to check existence.
-    - Commits once at the end; rolls back on error.
-    - Connection is automatically closed.
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table to query.
+    :type tableName: str
+    :param primaryKey: Value of the primary key to check for.
+    :type primaryKey: any
+    :param data: Mapping of column names to new values for insert or update.
+    :type data: dict
     """
     conn = sqlite3.connect(dbPath)  # connect to SQL DB
     cursor = conn.cursor()  # to get access to operations related to SQL DB
