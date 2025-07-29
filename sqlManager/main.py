@@ -85,3 +85,7 @@ def syncDB():
                     toInsert[key] = finalValue
 
                 updateDb(DB_PATH, tableName, shortName, toInsert)
+
+
+if __name__ == '__main__':
+    syncDB()

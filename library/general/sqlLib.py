@@ -109,7 +109,11 @@ def isEntryExists(dbPath, tableName, primaryKey):
     """
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
         cursor = conn.cursor()  # to get access to operations related to SQL DB
-        cursor.execute(f"SELECT 1 FROM {tableName} WHERE name = ?;", (primaryKey,))
+        primaryKeyColumn = getPrimaryKeyValue(dbPath, tableName)  # Dynamically fetch the name of the primary key column
+        if not primaryKeyColumn:
+            return False
+
+        cursor.execute(f"SELECT 1 FROM {tableName} WHERE {primaryKeyColumn} = ?;", (primaryKey,))
         return cursor.fetchone() is not None
 
 
@@ -151,7 +155,6 @@ def getRowAsDict(dbPath, tableName, primaryKey):
         columns = [description[0] for description in cursor.description]  # get columns name
 
         result = dict(zip(columns, row))  # build dict
-        conn.close()
         return result
 
 
