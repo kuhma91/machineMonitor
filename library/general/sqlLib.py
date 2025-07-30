@@ -184,6 +184,94 @@ def isTableExists(dbPath, tableName):
         return cursor.fetchone() is not None
 
 
+def deleteLine(dbPath, tableName, primKey):
+    """
+    Delete a single row from the specified table by primary key.
+
+    :param dbPath: Filesystem path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table from which to delete.
+    :type tableName: str
+    :param primKey: Value of the primary key for the row to delete.
+    :type primKey: str
+    """
+    if not isTableExists(dbPath, tableName):
+        raise ValueError(f"'{tableName}' does not exist in database: {dbPath}")
+
+    primColumn = getPrimaryColumn(dbPath, tableName)
+    if not primColumn:
+        raise ValueError(f"No primary key column found for table '{tableName}' in: {dbPath}")
+
+    existingKeys = {row[primColumn] for row in getAllRows(dbPath, tableName)}
+    if primKey not in existingKeys:
+        raise ValueError(f"Primary key '{primKey}' not found in table '{tableName}'")
+
+    # Open a connection and commit on success / rollback on error
+    conn = sqlite3.connect(dbPath)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"DELETE FROM {tableName} WHERE {primColumn} = ?;", (primKey,))
+        conn.commit()
+        print(f'deleted : {primKey}')
+
+    except Exception as e:
+        conn.rollback()
+        raise ValueError(f"Failed to delete row '{primKey}' from '{tableName}': {e}") from e
+
+    finally:
+        conn.close()
+
+
+def updateLine(dbPath, tableName, data):
+    """
+    Update specified columns of a row identified by its primary key in a SQLite table.
+
+    :param dbPath: Filesystem path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table where the row resides.
+    :type tableName: str
+    :param data: Dictionary containing the primary key and new column values.
+    :type data: dict[str, any]
+    """
+    if not isTableExists(dbPath, tableName):
+        raise ValueError(f"'{tableName}' does not exist in database: {dbPath}")
+
+    primaryColumn = getPrimaryColumn(dbPath, tableName)
+    if not primaryColumn:
+        raise ValueError(f"No primary key column found for table '{tableName}' in: {dbPath}")
+
+    rows = getAllRows(dbPath, tableName)
+    primaryValue  = data[primaryColumn]
+    existing = [row for row in rows if row[primaryColumn] == primaryValue ]
+    if len(existing) >= 1:
+        raise ValueError(f"Primary key '{primaryValue }' not found in table '{tableName}'")
+
+    current = existing[0]
+
+    # Open a connection and automatically commit on success / rollback on error
+    conn = sqlite3.connect(dbPath)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    try:
+        # Only update columns whose value has changed (skip primary key)
+        for column, value in data.items():
+            if column == primaryColumn or current[column] == value:
+                continue
+
+            cursor.execute(f"UPDATE {tableName} SET {column} = ? WHERE {primaryColumn} = ?;", (value, primaryValue))
+
+        conn.commit()
+        print(f"Updated row '{primaryValue}' in '{tableName}' successfully.")
+
+    except Exception as e:
+        conn.rollback()
+        raise ValueError(f"Failed to update row '{primaryValue}' from '{tableName}': {e}") from e
+
+    finally:
+        conn.close()
+
+
 def syncDatabase(dbPath, data):
     """
     Synchronize in-memory records with the SQLite database.
@@ -232,9 +320,11 @@ def syncDatabase(dbPath, data):
                 # English comment: update changed columns only
                 current = existingMap[key]
                 for column, value in rec.items():
-                    if current[column] != value:
-                        cursor.execute(f"UPDATE {tableName} SET {column} = ? WHERE {primaryColumn} = ?;", (value, key))
-                        print(f"updated: {tableName}.{column} for {key}")
+                    if current[column] == value:
+                        continue
+
+                    cursor.execute(f"UPDATE {tableName} SET {column} = ? WHERE {primaryColumn} = ?;", (value, key))
+                    print(f"updated: {tableName}.{column} for {key}")
 
         conn.commit()
         print("Database synchronized successfully.")

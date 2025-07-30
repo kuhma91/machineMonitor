@@ -13,6 +13,7 @@ from datetime import datetime
 # ==== third ==== #
 import sqlite3
 from fastapi import FastAPI
+from fastapi import status
 from fastapi import HTTPException
 
 # ==== local ===== #
@@ -197,6 +198,42 @@ def createLog(logsData):
         raise HTTPException(status_code=404, detail="Machine not found after insert")
 
     return Log(**row)
+
+
+@app.delete("/machines/{name}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a machine by name")
+def deleteMachin(name):
+    """
+    Delete a machine record from the database.
+
+    :param name: Primary key (name) of the machine to delete.
+    :type name: str
+
+    :return: No content on success.
+    :rtype: None
+    """
+    # connect and open cursor
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        # check existence
+        cursor.execute(
+            "SELECT 1 FROM machines WHERE name = ?;",
+            (name,)
+        )
+        if cursor.fetchone() is None:
+            # not found → 404
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Machine not found"
+            )
+        # delete the row
+        cursor.execute(
+            "DELETE FROM machines WHERE name = ?;",
+            (name,)
+        )
+        conn.commit()
+
+    # 204 No Content
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 print("📦 Registered routes →", [route.path for route in app.routes])
