@@ -13,6 +13,7 @@ description:
 
 # ==== third ==== #
 from pydantic import BaseModel
+from typing import Optional
 
 # ==== local ===== #
 
@@ -37,3 +38,19 @@ class Log(BaseModel):
     userName: str
     comment: str | None = None
     modifications: list[tuple[str,str]] | None = None
+
+
+class MachineIn(BaseModel):
+    name: str
+    sector: str
+    serial_number: str
+    year_of_acquisition: int
+    in_service: bool
+    comment: Optional[str] = None
+
+
+class LogIn(BaseModel):
+    machineName: str
+    type: str
+    project: str
+    comment: Optional[str] = None

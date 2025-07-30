@@ -8,6 +8,7 @@ description:
 """
 # ==== native ==== #
 import os
+from datetime import datetime
 
 # ==== third ==== #
 import sqlite3
@@ -19,6 +20,9 @@ from machineMonitor.api.models import Machine
 from machineMonitor.api.models import Log
 from machineMonitor.library.general.sqlLib import getTableFromDb
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
+from machineMonitor.library.general.sqlLib import syncDatabase
+from machineMonitor.library.general.sqlLib import getRowAsDict
+from machineMonitor.library.general.infoLib import getUUID
 
 # ==== global ==== #
 print(f"🔍 Loading FastAPI app from: {__file__}")
@@ -136,5 +140,63 @@ def getLog(uuid):
     if not records:
         raise HTTPException(status_code=404, detail="Log not found")
     return Log(**records[0])
+
+
+@app.post("/machines", response_model=Machine, summary="Create a new machine")
+def createMachine(machineData):
+    """
+    :param machineData: Data provided by the user to create a machine.
+    :type machineData: MachineIn
+
+    :return: Full machine record, including generated fields.
+    :rtype: Machine
+    """
+    data = machineData.model_dump()  # Serialize incoming Pydantic model to dict
+
+    # Insert into database (will INSERT or UPDATE as needed)
+    try:
+        syncDatabase(DB_PATH, {'machines': [data]})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # Retrieve the newly created row by its primary key
+    row = getRowAsDict(DB_PATH, 'machines', data['name'])
+    if not row:
+        raise HTTPException(status_code=404, detail="Machine not found after insert")
+
+    return Log(**row)
+
+
+@app.post("/logs", response_model=Machine, summary="Create a new log")
+def createLog(logsData):
+    """
+    :param logsData: Data provided by the user to create a log.
+    :type logsData: MachineIn
+
+    :return: Full log record, including generated fields.
+    :rtype: log
+    """
+    data = logsData.model_dump()  # Serialize incoming Pydantic model to dict
+
+    # Serialize incoming Pydantic model to dict
+    data.update({
+        'timeStamp': datetime.now().strftime('%Y_%m_%d__%H_%M_%S'),
+        'userName': os.getlogin(),
+        'uuid': getUUID()
+    })
+
+    # Insert into database (will INSERT or UPDATE as needed)
+    try:
+        syncDatabase(DB_PATH, {'logs': [data]})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # Retrieve the newly created row by its primary key
+    row = getRowAsDict(DB_PATH, 'logs', data['uuid'])
+    if not row:
+        raise HTTPException(status_code=404, detail="Machine not found after insert")
+
+    return Log(**row)
+
 
 print("📦 Registered routes →", [route.path for route in app.routes])

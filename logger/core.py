@@ -15,12 +15,11 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
-from PySide2.QtWidgets import QGraphicsPolygonItem
-
 # ==== third ==== #
 
 # ==== local ===== #
 from machineMonitor.library.general.infoLib import COLORS
+from machineMonitor.library.general.infoLib import getUUID
 
 # ==== global ==== #
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])
@@ -233,24 +232,6 @@ def getTempData():
         tempData[relatedDate] = os.path.join(tempFolder, item)
 
     return tempData
-
-
-def getUUID():
-    """
-    Generate a new UUID string and ensure it does not collide with existing files in LOGS_REPO.
-
-    :return: A unique UUID as a string.
-    :rtype: str
-    """
-    newId = str(uuid.uuid4())
-    if not os.path.exists(LOGS_REPO):
-        return newId
-
-    uuids = {os.path.splitext(x)[0] for x in os.listdir(LOGS_REPO)}
-    while newId in uuids:
-        newId = str(uuid.uuid4())
-
-    return newId
 
 
 def saveData(data, mode='save', logUuid=None):
