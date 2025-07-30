@@ -46,46 +46,44 @@ def publishFromLocal():
         if not relatedDBInfo:
             continue
 
-        for item in os.listdir(folder):
-            if not item.endswith('.json'):
+        for filename  in os.listdir(folder):
+            if not filename .endswith('.json'):
                 continue
 
-            shortName = os.path.splitext(item)[0]
+            keyName = os.path.splitext(filename)[0]
+            path = os.path.join(folder, filename)
 
-            filePath = os.path.join(folder, item)
-            with open(filePath, 'r', encoding='utf-8') as f:
+            filePath = os.path.join(folder, filename)
+            with open(path, 'r', encoding='utf-8') as f:
                 jsonData = json.load(f)
 
-                toInsert = {}
-                for info in relatedDBInfo:
-                    key = info[1]
-                    if info[0] == 0 and info[-1] == 1:
-                        toInsert[key] = shortName
+            toSync = {}
+            for info in relatedDBInfo:
+                columnName, columnType, required, isPrimKey = info[1], info[2], info[3], info[5]
+                if isPrimKey:
+                    toSync[columnName] = keyName
+                    continue
+
+                # check if value missing and if it's a required value
+                raw = jsonData.get(columnName)
+                if not raw:
+                    if not required:
                         continue
 
-                    value = jsonData.get(info[1])
-                    if not value:
-                        if info[3] != 1:
-                            continue
+                    raise ValueError(f'missing {columnName} in : {filePath}')
 
-                        raise ValueError(f'missing {info[1]} in : {filePath}')
+                # Conversion from data type
+                if columnType == 'BOOLEAN':
+                    booleanValue = [k for k, v in BOOLEAN_CONVERTER.items() if raw.lower() in v]
+                    if not booleanValue:
+                        raise ValueError(f"can't convert : {raw} as boolean")
 
-                    if isinstance(value, MATCHING_TYPES[info[2]]):
-                       toInsert[key] = value
-                       continue
+                    toSync[columnName] = booleanValue[0]
 
-                    if info[2] == 'BOOLEAN':
-                        boolValue = [k for k, v in BOOLEAN_CONVERTER.items() if value.lower() in v]
-                        if not boolValue:
-                            raise ValueError(f"can't convert : {value} as boolean")
+                else:
+                    toSync[columnName] = MATCHING_TYPES[columnType](raw)
 
-                        toInsert[key] = min(boolValue)
-                        continue
-
-                    finalValue = MATCHING_TYPES[info[2]](value)
-                    toInsert[key] = finalValue
-
-                    data.setdefault(tableName, []).append(toInsert)
+            data.setdefault(tableName, []).append(toSync)
 
     syncDatabase(DB_PATH, data)
 
