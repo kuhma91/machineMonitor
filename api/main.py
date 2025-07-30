@@ -157,7 +157,7 @@ def createMachine(machineData):
     try:
         syncDatabase(DB_PATH, {'machines': [data]})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))  # Internal Server Error
 
     # Retrieve the newly created row by its primary key
     row = getRowAsDict(DB_PATH, 'machines', data['name'])
@@ -189,7 +189,7 @@ def createLog(logsData):
     try:
         syncDatabase(DB_PATH, {'logs': [data]})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))  # Internal Server Error
 
     # Retrieve the newly created row by its primary key
     row = getRowAsDict(DB_PATH, 'logs', data['uuid'])
