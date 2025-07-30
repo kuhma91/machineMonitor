@@ -3,7 +3,7 @@
 fileName: sqlLib
 scripter: angiu
 creation date: 28/07/2025
-description: 
+description:
 ===============================================================================
 """
 # ==== native ==== #
@@ -16,7 +16,33 @@ import sqlite3
 # ==== global ==== #
 
 
-def getPrimaryKeyValue(dbPath, tableName):
+def getAllRows(dbPath, tableName):
+    """
+    Retrieve all rows from the specified table.
+
+    :param dbPath: Path to the SQLite database file.
+    :type dbPath: str
+
+    :param tableName: Name of the table to query.
+    :type tableName: str
+
+    :return: List of rows as dictionaries mapping column names to values.
+    :rtype: list[dict]
+    """
+    # Open a connection to the database and ensure it’s closed automatically
+    with sqlite3.connect(dbPath) as conn:
+        # Make each row behave like a dict: column_name → value
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        # Execute the query to get every row
+        cursor.execute(f"SELECT * FROM {tableName};")
+        rows = cursor.fetchall()
+
+    # Convert each sqlite3.Row to a plain dict
+    return [dict(row) for row in rows]
+
+
+def getPrimaryColumn (dbPath, tableName):
     """
     Identify the primary key column name for a given table.
 
@@ -80,7 +106,7 @@ def getRowAsDict(dbPath, tableName, primaryKey):
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
         cursor = conn.cursor()  # to get access to operations related to SQL DB
 
-        primaryColumn = getPrimaryKeyValue(dbPath, tableName)
+        primaryColumn = getPrimaryColumn(dbPath, tableName)
         if not primaryColumn:
             print(f'no primaryColumn found in : {dbPath} -> {tableName}')
             return {}
@@ -127,7 +153,7 @@ def isEntryExists(dbPath, tableName, primaryKey):
     """
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
         cursor = conn.cursor()  # to get access to operations related to SQL DB
-        primaryKeyColumn = getPrimaryKeyValue(dbPath, tableName)  # Dynamically fetch the name of the primary key column
+        primaryKeyColumn = getPrimaryColumn(dbPath, tableName)  # Dynamically fetch the name of the primary key column
         if not primaryKeyColumn:
             return False
 
@@ -158,52 +184,64 @@ def isTableExists(dbPath, tableName):
         return cursor.fetchone() is not None
 
 
-def updateDb(dbPath, tableName, primaryKey, data):
+def syncDatabase(dbPath, data):
     """
-    Insert or update a row in the specified table based on its primary key.
+    Synchronize in-memory records with the SQLite database.
 
     :param dbPath: Path to the SQLite database file.
     :type dbPath: str
-    :param tableName: Name of the table to query.
-    :type tableName: str
-    :param primaryKey: Value of the primary key to check for.
-    :type primaryKey: any
-    :param data: Mapping of column names to new values for insert or update.
-    :type data: dict
+    :param data: Mapping tableName -> list of row-dicts.
+    :type data: dict[str, list[dict]]
     """
     conn = sqlite3.connect(dbPath)  # connect to SQL DB
     cursor = conn.cursor()  # to get access to operations related to SQL DB
 
-    # INSERT key if does not exists
-    if not isEntryExists(dbPath, tableName, primaryKey):
-        placeHolders = ', '.join('?' for _ in data)
-        columnStr = ', '.join(list(data.keys()))
-        sqlCmd = f'INSERT INTO {tableName} ({columnStr}) VALUES ({placeHolders});'
-        cursor.execute(sqlCmd, list(data.values()))
-
-    else:
-        primaryColumn = getPrimaryKeyValue(dbPath, tableName)
-        if not primaryColumn:
-            raise f'{primaryKey} even exists in {dbPath} -> {tableName}\n\nbut no primaryKey found in table'
-
-        currentData = getRowAsDict(dbPath, tableName, primaryKey)
-        if not currentData:
-            raise f'no data found in : {dbPath} -> {tableName} -> {primaryKey}'
-
-        toUpdate = {column: value for column, value in data.items() if currentData[column] != value}
-        for columns, value in toUpdate.items():
-            sqlCmd = (f"UPDATE {tableName} "  # table to modify
-                      f"SET {columns} = ? "  # columns to update
-                      f"WHERE {primaryColumn} = ? ")  # term that target the only line to update
-
-            cursor.execute(sqlCmd, (value, primaryKey))
     try:
-        print(f'{dbPath} -> {tableName} -> {primaryKey} updated')
+        for tableName, records in data.items():
+            # Determine primary key column
+            primaryColumn  = getPrimaryColumn(dbPath, tableName)
+
+            # Load existing rows from DB
+            existingRows = getAllRows(dbPath, tableName)
+            existingKeys = {row[primaryColumn ] for row in existingRows}
+
+            # Desired keys from input
+            desiredKeys = {rec[primaryColumn] for rec in records}
+
+            # DELETE rows not in desiredKeys
+            for keyToDelete in existingKeys - desiredKeys:
+                # delete obsolete row
+                cursor.execute(f"DELETE FROM {tableName} WHERE {primaryColumn} = ?;", (keyToDelete,))
+                print(f'deleted: {keyToDelete}')
+
+            # Build a map for fast lookups
+            existingMap = {r[primaryColumn]: r for r in existingRows}
+
+            # INSERT new rows or UPDATE existing ones
+            for rec in records:
+                key = rec[primaryColumn]
+                if key not in existingKeys:
+                    # insert new row
+                    columns = ", ".join(rec.keys())
+                    placeholders = ", ".join("?" for _ in rec)
+                    values = tuple(rec.values())
+                    cursor.execute(f"INSERT INTO {tableName} ({columns}) VALUES ({placeholders});", values)
+                    print(f"added: {key}")
+                    continue
+
+                # English comment: update changed columns only
+                current = existingMap[key]
+                for column, value in rec.items():
+                    if current[column] != value:
+                        cursor.execute(f"UPDATE {tableName} SET {column} = ? WHERE {primaryColumn} = ?;", (value, key))
+                        print(f"updated: {tableName}.{column} for {key}")
+
         conn.commit()
+        print("Database synchronized successfully.")
 
     except Exception as e:
-        print(f'fail to update {dbPath} -> {tableName} -> {primaryKey} : {e}')
         conn.rollback()
+        raise ValueError(f"Failed to synchronize DB: {e}") from e
 
     finally:
         conn.close()

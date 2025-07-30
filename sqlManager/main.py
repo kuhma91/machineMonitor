@@ -14,7 +14,7 @@ import json
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getRelatedSQLInfo
-from machineMonitor.library.general.sqlLib import updateDb
+from machineMonitor.library.general.sqlLib import syncDatabase
 
 # ==== global ==== #
 PACKAGE_PATH = os.sep.join(__file__.split(os.sep)[:-2])
@@ -27,7 +27,7 @@ BOOLEAN_CONVERTER = {True: ['oui', 'o', 'yes', 'y', 'true'], False: ['non', 'n',
 MATCHING_TYPES = {'TEXT': str, 'BOOLEAN': bool, 'INTEGER': int}
 
 
-def syncDB():
+def publishFromLocal():
     """
     Synchronize local JSON data files into the SQLite database.
 
@@ -40,6 +40,7 @@ def syncDB():
     ValueError
         If a required field is missing or cannot be converted to the expected type.
     """
+    data = {}
     for tableName, folder in REPOS.items():
         relatedDBInfo = getRelatedSQLInfo(DB_PATH, tableName)
         if not relatedDBInfo:
@@ -84,8 +85,10 @@ def syncDB():
                     finalValue = MATCHING_TYPES[info[2]](value)
                     toInsert[key] = finalValue
 
-                updateDb(DB_PATH, tableName, shortName, toInsert)
+                    data.setdefault(tableName, []).append(toInsert)
+
+    syncDatabase(DB_PATH, data)
 
 
 if __name__ == '__main__':
-    syncDB()
+    publishFromLocal()
