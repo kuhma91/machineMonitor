@@ -59,7 +59,7 @@ def publishFromLocal():
                     toSync[columnName] = keyName
                     continue
 
-                # check if value missing and if it's a required value
+                # check if value was given and if it's a required value
                 raw = jsonData.get(columnName)
                 if not raw:
                     if not required:
