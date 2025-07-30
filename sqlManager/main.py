@@ -34,11 +34,6 @@ def publishFromLocal():
     Iterates over each table in REPOS, loads corresponding JSON files,
     converts their fields to the appropriate types, and inserts or updates
     records via `updateDb`.
-
-    Raises
-    ------
-    ValueError
-        If a required field is missing or cannot be converted to the expected type.
     """
     data = {}
     for tableName, folder in REPOS.items():
