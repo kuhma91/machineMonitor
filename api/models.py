@@ -24,6 +24,8 @@ class Machine(BaseModel):
     name: str
     sector: str
     serial_number: str
+    manufacturer : str
+    usage : str
     year_of_acquisition: int
     in_service: bool
     comment: str | None = None
@@ -44,6 +46,8 @@ class MachineIn(BaseModel):
     name: str
     sector: str
     serial_number: str
+    manufacturer : str
+    usage : str
     year_of_acquisition: int
     in_service: bool
     comment: Optional[str] = None

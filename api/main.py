@@ -7,233 +7,114 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
-import os
-from datetime import datetime
 
 # ==== third ==== #
-import sqlite3
 from fastapi import FastAPI
 from fastapi import status
+from fastapi import Request
 from fastapi import HTTPException
 
 # ==== local ===== #
-from machineMonitor.api.models import Machine
-from machineMonitor.api.models import Log
-from machineMonitor.library.general.sqlLib import getTableFromDb
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
-from machineMonitor.library.general.sqlLib import syncDatabase
-from machineMonitor.library.general.sqlLib import getRowAsDict
-from machineMonitor.library.general.infoLib import getUUID
+from machineMonitor.library.general.sqlLib import updateLine
+from machineMonitor.library.general.sqlLib import createLine
+from machineMonitor.library.general.sqlLib import deleteLine
+from machineMonitor.api.core import getUnSerializedValue
+from machineMonitor.api.core import logInToDict
+from machineMonitor.api.core import getInfo
+from machineMonitor.api.core import DB_PATH
 
 # ==== global ==== #
-print(f"🔍 Loading FastAPI app from: {__file__}")
+print(f"Loading FastAPI app from: {__file__}")
 
 app = FastAPI()  # lowerCase -> conventional
-PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
-DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
-MATCHING_TYPES = {'machines': Machine, 'logs': Log}
 
 
-def getInfo(dataType, filters=None):
+@app.post("/{dataType}", status_code=status.HTTP_204_NO_CONTENT,  summary="add line from given type and data")
+def createRecord(dataType, data):
     """
-    Retrieve records from a DB table and apply optional filters.
+    add a record from the specified table.
 
-    :param dataType: Name of the table to query.
+    :param dataType: Name of the table ('machines' or 'logs').
     :type dataType: str
-
-    :param filters: Dictionary of column names to values for filtering.
-    :type filters: dict[str, any]
-
-    :return: List of records as dictionaries.
-    :rtype: list[dict]
+    :param data: provided by the user to create a machine.
+    :type data: LogIn
     """
-    dataTypes = getTableFromDb(DB_PATH)
-    if not dataTypes:
-        raise ValueError(f'no data types found in : {DB_PATH}')
+    # convert Login as dict
+    recordDict = logInToDict(data, dataType)
 
-    if dataType not in dataTypes:
-        raise ValueError(f'{dataType} not in : {DB_PATH}')
+    # Insert into database
+    createLine(DB_PATH, dataType, recordDict)
 
-    primKey = getPrimaryColumn(DB_PATH, dataType)
-    if not primKey:
-        raise ValueError(f'no primeKey found in : {DB_PATH} -> {dataType}')
-
-    result = []
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row  # Return rows as dicts: column_name → value
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM {dataType};")  # Use parameterized queries to prevent SQL injection
-        rows = cursor.fetchall()
-
-    for row in rows:
-        obj = MATCHING_TYPES[dataType](**dict(row))  # Instantiate Pydantic model (Machine or Log)
-        record = obj.model_dump()  # serialize to dict
+    # get new created row
+    return getUnSerializedValue(dataType, recordDict, True)
 
 
-        # Apply filters if provided
-        if filters and not all(record.get(k) == v for k, v in filters.items()):
-            continue
-
-        result.append(record)
-
-    return result
-
-
-@app.get("/", summary="Read root")  # HTTP GET = request to use root to call function right under the decorator
-def read_root():
-    # return a simple JSON response
-    return {"msg": "OK"}
-
-
-@app.get("/machines", response_model=list[Machine], summary="List all machines",)
-def listMachines():
+@app.delete("/{dataType}/{pk}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete item from given type and primaryKey")
+def deleteRecord(dataType, pk):
     """
-    Retrieve the list of all machines.
+    Delete a record from the specified table.
 
-    :return: All machines from the database.
+    :param dataType: Name of the table ('machines' or 'logs').
+    :type dataType: str
+    :param pk: Primary key of the record to delete.
+    :type pk: str
+    """
+    try:
+        deleteLine(DB_PATH, dataType, pk)
+
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/{dataType}", response_model=list, summary="Search machines")
+def getData(dataType, request):
+    """
+    Retrieve machines with optional filters from query string.
+
+    :param dataType: Name of the table ('machines' or 'logs').
+    :type dataType: str
+    :param request: FastAPI request object containing query_params.
+    :type request: Request
+
+    :return: List of Machine instances matching filters.
     :rtype: list[Machine]
     """
-    records = getInfo("machines")
-    return [Machine(**r) for r in records]
-
-
-@app.get("/machines/{name}", response_model=Machine, summary="Get one machine by name")
-def getMachine(name):
-    """
-    Retrieve a single machine by its name.
-
-    :param name: Primary key of the machine.
-    :type name: str
-
-    :return: Machine record matching the name.
-    :rtype: Machine
-    """
-    records = getInfo("machines", filters={"name": name})
-    if not records:
-        raise HTTPException(status_code=404, detail="Machine not found")
-    return Machine(**records[0])
-
-
-@app.get("/logs", response_model=list[Log], summary="List all logs")
-def listLogs():
-    """
-    Retrieve all logs.
-
-    :return: All logs from the database.
-    :rtype: list[Log]
-    """
-    records = getInfo("logs")
-    return [Log(**r) for r in records]
-
-
-@app.get("/logs/{uuid}", response_model=Log, summary="Get one log by UUID")
-def getLog(uuid):
-    """
-    Retrieve a single log by its UUID.
-
-    :param uuid: Primary key of the log.
-    :type uuid: str
-
-    :return: Log record matching the UUID.
-    :rtype: Log
-    """
-    records = getInfo("logs", filters={"uuid": uuid})
-    if not records:
-        raise HTTPException(status_code=404, detail="Log not found")
-    return Log(**records[0])
-
-
-@app.post("/machines", response_model=Machine, summary="Create a new machine")
-def createMachine(machineData):
-    """
-    :param machineData: Data provided by the user to create a machine.
-    :type machineData: MachineIn
-
-    :return: Full machine record, including generated fields.
-    :rtype: Machine
-    """
-    data = machineData.model_dump()  # Serialize incoming Pydantic model to dict
-
-    # Insert into database (will INSERT or UPDATE as needed)
+    # convert all query parameters into a simple dict of filters
+    filters = dict(request.query_params)  # request.query_params is a MultiDict
     try:
-        syncDatabase(DB_PATH, {'machines': [data]})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))  # Internal Server Error
+        return getInfo(dataType, filters)
 
-    # Retrieve the newly created row by its primary key
-    row = getRowAsDict(DB_PATH, 'machines', data['name'])
-    if not row:
-        raise HTTPException(status_code=404, detail="Machine not found after insert")
-
-    return Log(**row)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.post("/logs", response_model=Machine, summary="Create a new log")
-def createLog(logsData):
+@app.put("/{dataType}/{data}", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
+def updateRecord(dataType, pk, data):
     """
-    :param logsData: Data provided by the user to create a log.
-    :type logsData: MachineIn
+    update a record from the specified table.
 
-    :return: Full log record, including generated fields.
-    :rtype: log
+    :param dataType: Name of the table ('machines' or 'logs').
+    :type dataType: str
+    :param pk: Primary key of the record to update
+    :type pk: str
+    :param data: Fields to update
+    :type data: LogIn
     """
-    data = logsData.model_dump()  # Serialize incoming Pydantic model to dict
+    recordDict = logInToDict(data, dataType)
+    primaryColumn = getPrimaryColumn(DB_PATH, dataType)
 
-    # Serialize incoming Pydantic model to dict
-    data.update({
-        'timeStamp': datetime.now().strftime('%Y_%m_%d__%H_%M_%S'),
-        'userName': os.getlogin(),
-        'uuid': getUUID()
-    })
+    # ensure PK in dict
+    if not recordDict[primaryColumn] == pk:
+        raise ValueError(f'given data does not match : {pk}')
 
-    # Insert into database (will INSERT or UPDATE as needed)
     try:
-        syncDatabase(DB_PATH, {'logs': [data]})
+        updateLine(DB_PATH, dataType, recordDict)
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))  # Internal Server Error
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # Retrieve the newly created row by its primary key
-    row = getRowAsDict(DB_PATH, 'logs', data['uuid'])
-    if not row:
-        raise HTTPException(status_code=404, detail="Machine not found after insert")
-
-    return Log(**row)
+    return getUnSerializedValue(dataType, recordDict, True)
 
 
-@app.delete("/machines/{name}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete a machine by name")
-def deleteMachin(name):
-    """
-    Delete a machine record from the database.
-
-    :param name: Primary key (name) of the machine to delete.
-    :type name: str
-
-    :return: No content on success.
-    :rtype: None
-    """
-    # connect and open cursor
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        # check existence
-        cursor.execute(
-            "SELECT 1 FROM machines WHERE name = ?;",
-            (name,)
-        )
-        if cursor.fetchone() is None:
-            # not found → 404
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Machine not found"
-            )
-        # delete the row
-        cursor.execute(
-            "DELETE FROM machines WHERE name = ?;",
-            (name,)
-        )
-        conn.commit()
-
-    # 204 No Content
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-print("📦 Registered routes →", [route.path for route in app.routes])
+print("Registered routes →", [route.path for route in app.routes])

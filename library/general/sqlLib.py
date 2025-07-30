@@ -223,6 +223,55 @@ def deleteLine(dbPath, tableName, primKey):
         conn.close()
 
 
+def createLine(dbPath, tableName, data):
+    """
+    Insert a new row into the specified table in the SQLite database.
+
+    :param dbPath: Filesystem path to the SQLite database file.
+    :type dbPath: str
+    :param tableName: Name of the table to insert into.
+    :type tableName: str
+    :param data: Dictionary mapping column names to values for the new row.
+    :type data: dict[str, any]
+    """
+    # Check that the table exists
+    if not isTableExists(dbPath, tableName):
+        raise ValueError(f"'{tableName}' does not exist in database: {dbPath}")
+
+    # Determine the primary key column for this table
+    primaryColumn = getPrimaryColumn(dbPath, tableName)
+    if not primaryColumn:
+        raise ValueError(f"No primary key column found for table '{tableName}' in: {dbPath}")
+
+    # Load existing rows to prevent duplicate primary keys
+    existingRows = getAllRows(dbPath, tableName)
+    existingPrimaryKeys = {r[primaryColumn]: r for r in existingRows}
+    primaryKey = data[primaryColumn]
+    if primaryKey in existingPrimaryKeys:
+        raise ValueError(f"{primaryKey} even exists in : {dbPath} -> {tableName}")
+
+    # Build the INSERT statement
+    columns = ", ".join(data.keys())
+    placeholders = ", ".join("?" for _ in data)
+    values = tuple(data.values())
+
+    conn = sqlite3.connect(dbPath)  # connect to the databas
+    cursor = conn.cursor()  # to get access to operations related to SQL DB
+    try:
+        # Execute the insertion and commit
+        cursor.execute(f"INSERT INTO {tableName} ({columns}) VALUES ({placeholders});", values)
+        conn.commit()
+        print(f"added: {primaryKey}")
+
+    except Exception as e:
+        # Roll back on error
+        conn.rollback()
+        raise ValueError(f"Failed to add {primaryKey} in : {tableName} -> {e}") from e
+
+    finally:
+        conn.close()
+
+
 def updateLine(dbPath, tableName, data):
     """
     Update specified columns of a row identified by its primary key in a SQLite table.
