@@ -18,7 +18,7 @@ from fastapi import HTTPException
 from machineMonitor.api.models import Machine
 from machineMonitor.api.models import Log
 from machineMonitor.library.general.sqlLib import getTableFromDb
-from machineMonitor.library.general.sqlLib import getPrimaryKeyValue
+from machineMonitor.library.general.sqlLib import getPrimaryColumn
 
 # ==== global ==== #
 print(f"🔍 Loading FastAPI app from: {__file__}")
@@ -49,7 +49,7 @@ def getInfo(dataType, filters=None):
     if dataType not in dataTypes:
         raise ValueError(f'{dataType} not in : {DB_PATH}')
 
-    primKey = getPrimaryKeyValue(DB_PATH, dataType)
+    primKey = getPrimaryColumn(DB_PATH, dataType)
     if not primKey:
         raise ValueError(f'no primeKey found in : {DB_PATH} -> {dataType}')
 
