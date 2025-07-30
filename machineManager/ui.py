@@ -168,5 +168,3 @@ class MachineManagerUi(QtWidgets.QDialog):
         layout.setStretch(0, 3)
         layout.setStretch(1, 1)
         self.mainLayout.addWidget(self.endContainer)
-
-

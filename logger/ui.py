@@ -243,5 +243,3 @@ class LogViewerUi(QtWidgets.QDialog):
             layout.addLayout(sideLayout)
 
         self.mainLayout.addLayout(layout)
-
-
