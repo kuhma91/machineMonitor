@@ -8,7 +8,10 @@ description:
 """
 # ==== native ==== #
 import os
+import pprint
 from datetime import datetime
+from starlette.requests import Request
+from starlette.datastructures import QueryParams
 
 # ==== third ==== #
 from machineMonitor.api.models import Machine
@@ -21,6 +24,7 @@ from machineMonitor.library.general.sqlLib import getPrimaryColumn
 from machineMonitor.library.general.sqlLib import getTableFromDb
 from machineMonitor.library.general.sqlLib import getRowAsDict
 from machineMonitor.library.general.sqlLib import getAllRows
+from machineMonitor.library.general.sqlLib import getAllColumns
 from machineMonitor.library.general.infoLib import getUUID
 
 # ==== global ==== #
@@ -28,6 +32,7 @@ PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn}
+SEARCH_TEMPLATE = "SELECT * FROM {dataType} WHERE {searchFilters}"
 
 
 def getInfo(dataType, filters):
@@ -119,3 +124,56 @@ def logInToDict(logIn, dataType):
         })
 
     return data
+
+
+def getRequestCmd(dataType, data):
+    """
+    Build a SQL SELECT command with parameterized WHERE filters.
+
+    :param dataType: Name of the table to query.
+    :type dataType: str
+    :param data: Mapping of column names to filter values.
+    :type data: dict[str, any]
+
+    :return: A tuple with the SQL command string and the corresponding values.
+    :rtype: tuple[str, tuple]
+    """
+    # Build the WHERE clause with placeholders
+    searchFilters = ' AND '.join([f'{k} = ?' for k in data])
+    cmd = SEARCH_TEMPLATE.format(dataType=dataType, searchFilters=searchFilters)
+
+    # Convert booleans to ints and others to strings
+    values = []
+    for v in data.values():
+        if isinstance(v, bool):
+            values.append(1 if v else 0)
+            continue
+
+        values.append(str(v))
+
+    return cmd, tuple(values)
+
+
+def getRelatedTables(data):
+    """
+    Identify which tables contain the provided filter keys.
+
+    :param data: Mapping of filter keys to values.
+    :type data: dict[str, any]
+
+    :return: A dict mapping each matching table name to its subset of filters.
+    :rtype: dict[str, dict[str, any]]
+    """
+    tables = {}
+    for table in getTableFromDb(DB_PATH):
+        # Fetch all column names for this table
+        columns = getAllColumns(DB_PATH, table)
+        # Determine which filters apply to this table
+        matching = [col for col in columns if col in data]
+        if not matching:
+            continue
+
+        # Determine which filters apply to this table
+        tables[table] = {k: v for k, v in data.items() if k in columns}
+
+    return tables

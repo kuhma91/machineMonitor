@@ -15,6 +15,52 @@ import sqlite3
 
 # ==== global ==== #
 
+def execMultiRequests(dbPath, cmds):
+    """
+    Execute multiple parameterized SQL commands and collect their results.
+
+    :param dbPath: Filesystem path to the SQLite database file.
+    :type dbPath: str
+    :param cmds: Mapping of table names to SQL command strings.
+    :type cmds: dict[str, str]
+
+    :return: List of row dictionaries with an added 'dataType' field.
+    :rtype: list[dict]
+    """
+    result = []
+    with sqlite3.connect(dbPath) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        for dType, (sql, values) in cmds.items():
+            cursor.execute(sql, values)
+            rows = cursor.fetchall()
+            for row in rows:
+                info = dict(row)
+                info['dataType'] = dType
+                result.append(info)
+
+    return result
+
+
+def getAllColumns(dbPath, tableName):
+    """
+    Return the list of column names for a given table in a SQLite database.
+
+    :param dbPath: path to the SQLite file
+    :type dbPath: str
+    :param tableName: name of the table to inspect
+    :type tableName: str
+
+    :return: list of column names in order
+    :rtype: list[str]
+    """
+    with sqlite3.connect(dbPath) as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"PRAGMA table_info({tableName});")
+        # cursor.fetchall() => list of tuples (cid, name, type, notnull, dflt_value, pk)
+        return [col[1] for col in cursor.fetchall()]
+
 
 def getAllRows(dbPath, tableName):
     """

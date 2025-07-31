@@ -16,12 +16,18 @@ from fastapi import HTTPException
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
+from machineMonitor.library.general.sqlLib import getTableFromDb
+from machineMonitor.library.general.sqlLib import getAllRows
+from machineMonitor.library.general.sqlLib import isTableExists
 from machineMonitor.library.general.sqlLib import updateLine
 from machineMonitor.library.general.sqlLib import createLine
 from machineMonitor.library.general.sqlLib import deleteLine
+from machineMonitor.library.general.sqlLib import execMultiRequests
 from machineMonitor.api.core import getUnSerializedValue
 from machineMonitor.api.core import logInToDict
 from machineMonitor.api.core import getInfo
+from machineMonitor.api.core import getRelatedTables
+from machineMonitor.api.core import getRequestCmd
 from machineMonitor.api.core import DB_PATH
 
 # ==== global ==== #
@@ -67,8 +73,8 @@ def deleteRecord(dataType, pk):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.get("/{dataType}", response_model=list, summary="Search machines")
-def getData(dataType, request):
+@app.get("/{dataType}", response_model=list[dict], summary="search from filters")
+def dynamicRequest(dataType=None, request=None):
     """
     Retrieve machines with optional filters from query string.
 
@@ -78,15 +84,48 @@ def getData(dataType, request):
     :type request: Request
 
     :return: List of Machine instances matching filters.
-    :rtype: list[Machine]
+    :rtype: list[dict]
     """
-    # convert all query parameters into a simple dict of filters
-    filters = dict(request.query_params)  # request.query_params is a MultiDict
-    try:
-        return getInfo(dataType, filters)
+    result = []
+    # If no table and no filter request, return all rows from all tables
+    if not dataType and not request:
+        for table in getTableFromDb(DB_PATH):
+            for rowDict in getAllRows(DB_PATH, table):
+                # annotate row with its source table
+                rowDict['dataType'] = table
+                result.append(rowDict)
 
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        return result
+
+    cmds = {}
+    # If a specific table is requested
+    if dataType:
+        # ensure the table exists
+        if not isTableExists(DB_PATH, dataType):
+            raise ValueError(f'{dataType} does not exist in : {DB_PATH}')
+
+        # no filters provided: return full table
+        if not request:
+            return getAllRows(DB_PATH, dataType)
+
+        cmds[dataType] = getRequestCmd(dataType, dict(request.query_params))
+
+    else:
+        # No specific table, but no filters: return all rows from all tables
+        if not request:
+            data = []
+            for table in getTableFromDb(DB_PATH):
+                data.extend(getAllRows(DB_PATH, table))
+
+            return data
+
+        # Determine which tables the filter keys belong to
+        tables = getRelatedTables(dict(request.query_params))
+        for table, relatedFilters in tables.items():
+            # build a SELECT command per matching table
+            cmds[table] = getRequestCmd(table, relatedFilters)
+
+    return execMultiRequests(DB_PATH, cmds)
 
 
 @app.put("/{dataType}/{data}", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
@@ -118,3 +157,26 @@ def updateRecord(dataType, pk, data):
 
 
 print("Registered routes →", [route.path for route in app.routes])
+
+
+# def simulateServerRequest(filters):
+#     """
+#     Simulate a FastAPI request to test dynamicRequest locally with filters.
+#
+#     :param filters: Dictionary of query parameters.
+#     :type filters: dict
+#     """
+#     import pprint
+#
+#     queryString = '&'.join(f"{k}={v}" for k, v in filters.items())
+#     scope = {
+#         'type': 'http',
+#         'query_string': queryString.encode('utf-8'),
+#         'headers': [],
+#     }
+#     fakeRequest = Request(scope)
+#
+#     pprint.pprint(dynamicRequest('machines', fakeRequest))
+#
+#
+# simulateServerRequest({'sector': '1A', 'in_service': 1})
