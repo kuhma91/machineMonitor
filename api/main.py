@@ -74,7 +74,7 @@ def deleteRecord(dataType, pk):
 
 
 @app.get("/{dataType}", response_model=list[dict], summary="search from filters")
-def dynamicRequest(dataType=None, request=None):
+def dynamicRequest(dataType=None, request=None, limit=None, offset=None, orderBy=None, descending=False, like=None, iLike=None):
     """
     Retrieve machines with optional filters from query string.
 
@@ -82,20 +82,25 @@ def dynamicRequest(dataType=None, request=None):
     :type dataType: str
     :param request: FastAPI request object containing query_params.
     :type request: Request
+    :param limit: max items number to return
+    :type limit: int
+    :param offset: items number to ignore before start to return
+    :type offset: int
+    :param orderBy: column name to sort result by
+    :type orderBy: str
+    :param descending: sorted or reversed
+    :type descending: bool
+    :param like: concerned column and related text that related cells have to contain
+    :type like: Request
+    :param iLike: is given like sensible to case (upper or lower)
+    :type iLike: bool
 
     :return: List of Machine instances matching filters.
     :rtype: list[dict]
     """
-    result = []
-    # If no table and no filter request, return all rows from all tables
-    if not dataType and not request:
-        for table in getTableFromDb(DB_PATH):
-            for rowDict in getAllRows(DB_PATH, table):
-                # annotate row with its source table
-                rowDict['dataType'] = table
-                result.append(rowDict)
-
-        return result
+    sqlData = {
+        'limit': limit, 'offset': offset, 'orderBy': orderBy, 'descending': descending, 'like': like, 'iLike': iLike
+    }
 
     cmds = {}
     # If a specific table is requested
@@ -108,27 +113,30 @@ def dynamicRequest(dataType=None, request=None):
         if not request:
             return getAllRows(DB_PATH, dataType)
 
-        cmds[dataType] = getRequestCmd(dataType, dict(request.query_params))
+        cmds[dataType] = getRequestCmd(dataType, dict(request.query_params), sqlData)
 
     else:
         # No specific table, but no filters: return all rows from all tables
         if not request:
-            data = []
+            result = []
             for table in getTableFromDb(DB_PATH):
-                data.extend(getAllRows(DB_PATH, table))
+                for rowDict in getAllRows(DB_PATH, table):
+                    # annotate row with its source table
+                    rowDict['dataType'] = table
+                    result.append(rowDict)
 
-            return data
+            return result
 
         # Determine which tables the filter keys belong to
         tables = getRelatedTables(dict(request.query_params))
         for table, relatedFilters in tables.items():
             # build a SELECT command per matching table
-            cmds[table] = getRequestCmd(table, relatedFilters)
+            cmds[table] = getRequestCmd(table, relatedFilters, sqlData)
 
     return execMultiRequests(DB_PATH, cmds)
 
 
-@app.put("/{dataType}/{data}", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
+@app.put("/{dataType}/{pk}", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
 def updateRecord(dataType, pk, data):
     """
     update a record from the specified table.

@@ -18,6 +18,7 @@ from machineMonitor.api.models import Machine
 from machineMonitor.api.models import MachineIn
 from machineMonitor.api.models import Log
 from machineMonitor.api.models import LogIn
+from fastapi import Query
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
@@ -32,7 +33,6 @@ PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn}
-SEARCH_TEMPLATE = "SELECT * FROM {dataType} WHERE {searchFilters}"
 
 
 def getInfo(dataType, filters):
@@ -126,7 +126,35 @@ def logInToDict(logIn, dataType):
     return data
 
 
-def getRequestCmd(dataType, data):
+def formatSqlModifiers(sqlData):
+    """
+    Format SQL modifiers such as ORDER BY, LIMIT, and OFFSET based on provided parameters.
+
+    :param sqlData: Dictionary containing optional SQL modifiers (orderBy, descending, limit, offset).
+    :type sqlData: dict[str, any]
+
+    :return: SQL modifiers string to append to a SELECT query.
+    :rtype: str
+    """
+    parts = []
+
+    orderBy = sqlData.get('orderBy')
+    if orderBy:
+        direction = 'DESC' if sqlData.get('descending') else 'ASC'
+        parts.append(f'ORDER BY {orderBy} {direction}')
+
+    limit = sqlData.get('limit')
+    if limit:
+        parts.append(f'LIMIT {int(limit)}')
+
+    offset = sqlData.get('offset')
+    if offset:
+        parts.append(f'OFFSET {int(offset)}')
+
+    return ' '.join(parts)
+
+
+def getRequestCmd(dataType, data, sqlData):
     """
     Build a SQL SELECT command with parameterized WHERE filters.
 
@@ -134,24 +162,38 @@ def getRequestCmd(dataType, data):
     :type dataType: str
     :param data: Mapping of column names to filter values.
     :type data: dict[str, any]
+    :param sqlData: Mapping of SQL value to filter values (limit, offset, sortedBy, ect.)
+    :type sqlData: dict[str, any]
 
     :return: A tuple with the SQL command string and the corresponding values.
     :rtype: tuple[str, tuple]
     """
     # Build the WHERE clause with placeholders
-    searchFilters = ' AND '.join([f'{k} = ?' for k in data])
-    cmd = SEARCH_TEMPLATE.format(dataType=dataType, searchFilters=searchFilters)
+    whereClause = ' AND '.join([f'{k} = ?' for k in data])
+    cmd = f"SELECT * FROM {dataType}"
+    if whereClause:
+        cmd += f" WHERE {whereClause}"
 
-    # Convert booleans to ints and others to strings
+    likes = sqlData.get('like', {})
+    if likes:
+        cmd += ' AND ' + ' AND '.join([f'{x} ILIKE ?' if sqlData.get('iLike') else f'{x} LIKE ?' for x in likes])
+
+    # Add tri/pagination
+    cmd += ' ' + formatSqlModifiers(sqlData)
+
     values = []
     for v in data.values():
+        # Convert booleans to ints and others to strings
         if isinstance(v, bool):
             values.append(1 if v else 0)
             continue
 
         values.append(str(v))
 
-    return cmd, tuple(values)
+    if likes:
+        values.extend([f'%{x}%' for x in likes.values()])
+
+    return cmd.strip(), tuple(values)
 
 
 def getRelatedTables(data):
