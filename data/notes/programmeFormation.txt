@@ -1,0 +1,107 @@
+Phase 1 – SQL
+Bases des bases de données relationnelles
+
+Concept : table = onglet Excel, ligne = enregistrement, colonne = champ
+
+Clés primaires (PK) et étrangères (FK) : identifiants uniques et liens entre tables
+
+Schéma (DDL)
+
+CREATE TABLE IF NOT EXISTS : préparer le “patron” de tes tables
+
+Types de données : TEXT, INTEGER, BOOLEAN
+
+Contraintes : NOT NULL, PRIMARY KEY, FOREIGN KEY
+
+CRUD en SQL
+
+SELECT : lire des lignes (SELECT * FROM machines WHERE name = ?;)
+
+INSERT : ajouter (INSERT INTO machines (…) VALUES (…);)
+
+UPDATE : modifier (UPDATE machines SET col = ? WHERE pk = ?;)
+
+DELETE : supprimer (DELETE FROM logs WHERE uuid = ?;)
+
+Introspection
+
+PRAGMA table_info(table) pour décrire une table
+
+sqlite_master pour lister les tables existantes
+
+Python + sqlite3
+
+connect(), cursor(), execute(), commit(), rollback()
+
+Context manager (with sqlite3.connect(db) as conn:) pour garantir fermeture
+
+Migration JSON → SQL
+
+Fonctions getRelatedSQLInfo, getAllRows, getPrimaryColumn
+
+Automatisation avec syncDB() / updateDb() / createLine() / updateLine() / deleteLine()
+
+Phase 2 – API REST
+Introduction à REST & HTTP
+
+Verbes (GET, POST, PUT, DELETE), ressources et URIs
+
+FastAPI & Uvicorn
+
+pip install fastapi uvicorn
+
+uvicorn main:app --reload pour lancer le serveur
+
+Pydantic
+
+Définir tes modèles d’entrée (MachineIn, LogIn) et de sortie (Machine, Log)
+
+(Dé)sérialisation : model_dump() remplace dict()
+
+Structure minimale d’une appli FastAPI
+
+app = FastAPI() puis @app.get(), @app.post(), etc.
+
+Séparation path params vs query params vs body
+
+Endpoints CRUD exposés
+
+GET /machines (liste) & /machines/{name} (détail)
+
+POST /machines (création)
+
+PUT /machines/{name} (mise à jour)
+
+DELETE /machines/{name} (suppression)
+
+Gestion des erreurs
+
+Lever HTTPException(status_code=…, detail=…)
+
+Codes 200, 201, 204, 400, 404, 500
+
+Documentation automatique
+
+/docs (Swagger UI) & /openapi.json
+
+Tests avec cURL
+
+Exemple :
+
+bash
+Copier
+Modifier
+# lister toutes les machines
+curl -i http://127.0.0.1:8000/machines?sector=A1&in_service=true
+Ce qui reste à aborder
+Requêtes complexes et filtres dynamiques (multi‑critères via query params)
+
+Pagination, tri et recherche full‑text en SQL
+
+Sécurité (authentification, CORS) dans FastAPI
+
+Tests unitaires et d’intégration pour l’API
+
+Déploiement (Docker, CI/CD)
+
+Ce calendrier te convient‑il pour la suite ?
