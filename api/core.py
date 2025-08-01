@@ -108,7 +108,7 @@ def getAllUserInfo():
     :rtype: dict
     """
     allUsers = getAllRows(DB_PATH, 'employs')
-    return {u['token']: u for u in allUsers}
+    return {u.get('token'): u for u in allUsers}
 
 
 def getDataTypesAndColumns(data):

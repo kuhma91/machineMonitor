@@ -55,6 +55,10 @@ def getAllColumns(dbPath, tableName):
     :return: list of column names in order
     :rtype: list[str]
     """
+    if not isTableExists(dbPath, tableName):
+        print(f'{tableName} not found in : {dbPath}')
+        return []
+
     with sqlite3.connect(dbPath) as conn:
         cursor = conn.cursor()
         cursor.execute(f"PRAGMA table_info({tableName});")
@@ -75,6 +79,10 @@ def getAllRows(dbPath, tableName):
     :return: List of rows as dictionaries mapping column names to values.
     :rtype: list[dict]
     """
+    if not isTableExists(dbPath, tableName):
+        print(f'{tableName} not found in : {dbPath}')
+        return []
+
     # Open a connection to the database and ensure it’s closed automatically
     with sqlite3.connect(dbPath) as conn:
         # Make each row behave like a dict: column_name → value
@@ -102,6 +110,7 @@ def getPrimaryColumn (dbPath, tableName):
     """
     sqlInfo = getRelatedSQLInfo(dbPath, tableName)
     if not sqlInfo:
+        print(f'{tableName} not found in : {dbPath}')
         return None
 
     primaryKeyValues = [x[1] for x in sqlInfo if x[-1] == 1]  # get primary key column name
