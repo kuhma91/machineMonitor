@@ -39,7 +39,7 @@ Il permet une **centralisation** des données, une **traçabilité complète**, 
 
 ---
 
-## 2. architecture générale
+## 2. Architecture générale
 Le projet s’organise autour d’une architecture modulaire Python/PySide2/SQLite/REST API, chaque module remplissant un rôle clair dans le fonctionnement global. 
 
 | Module         | Rôle principal                                | Interface         |
@@ -49,6 +49,14 @@ Le projet s’organise autour d’une architecture modulaire Python/PySide2/SQLi
 | `logger`       | Journalisation automatique des modifications  | UI (PySide2)      |
 | `api`          | Accès distant aux données via FastAPI         | API REST          |
 | `sqlLib`       | Accès centralisé aux données SQLite           | Backend SQLite    |
+
+
+#### Librairies communes (`library/general/`)
+Ces fichiers contiennent des outils transverses utilisés par tous les modules :
+- `infoLib.py` : détection de l’OS, chemins, datetime, etc.
+- `sqlLib.py` : fonctions SQLite (connexion, exécution, erreurs)
+- `stringLib.py` : outils de formatage de chaînes (naming, nettoyage)
+- `uiLib.py` : widgets réutilisables pour PySide2
 
 ```
 ┌─────────────┐ ┌──────────────┐ ┌────────────────┐ ┌────────┐ ┌─────┐
@@ -144,7 +152,7 @@ machineMonitor/
 
 ## 4. Outils
 
-### 4.1 token Manager
+### 4.1 Token Manager
 #### Module : tokenManager
 
 ### Problématique ciblée
@@ -253,7 +261,7 @@ Exemple :
 
 
 ### 4.2 Machine Manager
-#### Module : MachineManager
+#### Module concerné : `machineMonitor.machineManager`
 
 #### Problématique ciblée
 Dans un contexte industriel de suivi d'équipements, il est impératif de pouvoir :
@@ -362,7 +370,7 @@ Aucun contrôle intégré dans ce module — doit être couplé à un `TokenMana
 ---
 
 ### 4.3 Logger
-#### Module : Logger (core + UI + Viewer)
+#### Module concerné : `machineMonitor.logger`
 
 
 #### Problématique ciblée
@@ -495,7 +503,7 @@ python -m machineMonitor.logger.main
 
 ---
 ### 4.4 API (FastAPI)
-## Module : API REST
+#### Module concerné : `machineMonitor.api`
 
 ### Problématique ciblée
 
@@ -664,3 +672,13 @@ requests.get("http://localhost:8000/machines")
 - Les noms des machines doivent correspondre aux fichiers dans `/data/machines/`
 - Les logs sont stockés dans `/data/logs/` avec nom UUID
 - Tous les utilisateurs doivent être enregistrés dans `/data/employs/*.json` pour apparaître dans les interfaces
+
+
+#### Tables SQLite (`machineMonitor.db`)
+
+- `machines(name, sector, usage, manufacturer, ...)`
+- `logs(uuid, timestamp, machine, user, type, comment)`
+- `employs(uuid, user, usage, ...)`
+
+Clés primaires (`name`, `uuid`), relations indirectes, typage strict.
+Base synchronisée automatiquement depuis les fichiers JSON.
