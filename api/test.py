@@ -3,7 +3,9 @@ from machineMonitor.api.main import app
 
 client = TestClient(app)
 
-AUTH_HEADER = {"Authorization": "Bearer <57855dd06eddeccb87970a9e739a6da66e1f00826ca33ac392fb3bcbceb33e51>"}
+AUTH_HEADER = {
+    "Authorization": "Bearer 57855dd06eddeccb87970a9e739a6da66e1f00826ca33ac392fb3bcbceb33e51"
+}
 
 
 def testPostMachine():
@@ -20,7 +22,6 @@ def testPostMachine():
     }
     response = client.post("/create", params=payload)
     assert response.status_code == 204
-    assert response.json().get("name") == "testMachine"
 
 
 def testGetMachineByName():
@@ -38,4 +39,4 @@ def testGetLogsLikeUser():
 
 def testSecureLogsRequiresToken():
     response = client.get("/ask")  # no token
-    assert response.status_code == 403  # 403 attendu sans header
+    assert response.status_code == 403

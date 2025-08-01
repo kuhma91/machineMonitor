@@ -18,9 +18,9 @@ from machineMonitor.library.general.sqlLib import syncDatabase
 DATA_PATH = os.path.split(__file__)[0]
 DB_PATH = os.path.join(DATA_PATH, "machineMonitor.db")
 REPOS = {
-    'machines': os.path.join(DATA_PATH, 'data', 'machines'),
-    'logs': os.path.join(DATA_PATH, 'data', 'logs'),
-    'employs': os.path.join(DATA_PATH, 'data', 'employs')
+    'machines': os.path.join(DATA_PATH, 'machines'),
+    'logs': os.path.join(DATA_PATH, 'logs'),
+    'employs': os.path.join(DATA_PATH, 'employs')
 }
 BOOLEAN_CONVERTER = {True: ['oui', 'o', 'yes', 'y', 'true'], False: ['non', 'n', 'no', 'false']}
 MATCHING_TYPES = {'TEXT': str, 'BOOLEAN': bool, 'INTEGER': int}
