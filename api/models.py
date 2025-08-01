@@ -42,7 +42,7 @@ class Log(BaseModel):
     modifications: list[tuple[str,str]] | None = None
 
 
-class User(BaseModel):
+class Employ(BaseModel):
     token: str
     first_name: str
     last_name: str
@@ -68,7 +68,7 @@ class LogIn(BaseModel):
     comment: Optional[str] = None
 
 
-class UserIn(BaseModel):
+class EmployIn(BaseModel):
     token: str
     first_name: str
     last_name: str
