@@ -30,7 +30,6 @@ PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn}
-EMPLOYS_FOLDER = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'data', 'employs')
 AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 SQL_KEYS = ['limit', 'offset', 'orderBy', 'descending', 'like', 'iLike']
 
@@ -108,8 +107,8 @@ def getAllUserInfo():
     :return: Dictionary with token as key and user info as value.
     :rtype: dict
     """
-    with open(EMPLOYS_DATA, 'r', encoding='utf-8') as f:
-        return {v['token']: v for v in json.load(f).values()}
+    allUsers = getAllRows(DB_PATH, 'employs')
+    return {u['token']: u for u in allUsers}
 
 
 def getDataTypesAndColumns(data):
