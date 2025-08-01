@@ -7,10 +7,8 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
-import uuid
 import os
 import re
-import csv
 import json
 from datetime import datetime
 from datetime import timedelta
@@ -144,23 +142,20 @@ def getEmployeesData():
     """
     data = {}
 
-    employeesFile = os.path.join(DATA_REPO, 'employes.csv')
+    employeesFile = os.path.join(DATA_REPO, 'users', 'employs.json')
     if not os.path.exists(employeesFile):
         return data
 
-    titles = None
-    with open(employeesFile, encoding='utf-8', newline='') as f:
-        reader = csv.reader(f, delimiter=',')
-        for i, row in enumerate(reader):
-            if i == 0:
-                titles = [x.strip().lower() for x in row]
-                continue
+    with open(employeesFile, 'r', encoding='utf-8') as f:
+        data = json.load(f)
 
-            trigramIndex = [x.strip() for x in titles].index('trigram')
-            trigram = row[trigramIndex].strip().lower()
-            data[trigram] = {x: row[i].strip().lower() for i, x in enumerate(titles)}
+        result = {}
+        for fullName, info in data.items():
+            info['fullName'] = fullName
+            trigram = info.pop('trigram')
+            result[trigram] = info
 
-    return data
+    return result
 
 
 def getFileData(folder):

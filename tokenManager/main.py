@@ -76,22 +76,22 @@ class TokenManager:
     def nameChangedCommand(self, name, *args):
         nameWidgets = self.uiMenus.get('nameField', {})
 
-        name = {}
+        nameDict = {}
         for k, textField in nameWidgets.items():
             entry = textField.text().strip()
             if not entry:
                 break
 
-            name[k] = entry.strip()
+            nameDict[k] = entry.strip()
 
         value = False
-        if len(name) == len(nameWidgets):
+        if len(nameDict) == len(nameWidgets):
             users = getUsers()
-            value = ' '.join(name) not in users
+            value = ' '.join(nameDict) not in users
 
         trigram = None
         if value:
-            trigram = generateTrigram(**name)
+            trigram = generateTrigram(**nameDict)
             value = trigram is not None
 
         if value:
