@@ -4,9 +4,9 @@
 ## Sommaire
 
 1. [Contexte et objectifs](#1-Contexte-et-objectifs)
-2. [Réponse proposée : architecture générale & outils](#2-Réponse-proposée-:-architecture-générale-&-outils)
-3. [Structure du projet & modules principaux](#3-Structure-du-projet-&-modules-principaux)
-4. [Outils : fonctionnement, rôle, utilisation, tests](#4-Outils-:-fonctionnement,-rôle,-utilisation,-tests)
+2. [architecture générale](#2-architecture-générale)
+3. [Structure du projet](#3-Structure-du-projet)
+4. [Outils](#4-Outils)
    - [4.1 Token Manager](#41-Token-Manager)
    - [4.2 Machine Manager](#42-machine-manager)
    - [4.3 Logger](#43-logger)
@@ -40,7 +40,7 @@ Il permet une **centralisation** des données, une **traçabilité complète**, 
 
 ---
 
-## 2. Réponse proposée : architecture générale & outils
+## 2. architecture générale
 Le projet s’organise autour d’une architecture modulaire Python/PySide2/SQLite/REST API, chaque module remplissant un rôle clair dans le fonctionnement global. 
 
 | Module         | Rôle principal                                | Interface         |
@@ -90,7 +90,7 @@ Chacun peut fonctionner **indépendamment**, mais ils partagent :
 ---
 
 
-## 3. Structure du projet & modules principaux
+## 3. Structure du projet
 
 ```
 machineMonitor/
@@ -136,7 +136,7 @@ machineMonitor/
 
 ---
 
-## 4. Outils : fonctionnement, rôle, utilisation, tests
+## 4. Outils
 
 ### 4.1 token Manager
 #### Module : tokenManager
