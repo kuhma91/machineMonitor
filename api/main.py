@@ -17,7 +17,7 @@ from fastapi import status
 from fastapi import Request
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi.security import HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
@@ -30,21 +30,20 @@ from machineMonitor.api.core import getDataTypesAndColumns
 from machineMonitor.api.core import getUnSerializedValue
 from machineMonitor.api.core import getAllowedNames
 from machineMonitor.api.core import getRequestCmd
-from machineMonitor.api.core import logInToDict
 from machineMonitor.api.core import hasAccess
 from machineMonitor.api.core import DB_PATH
 from machineMonitor.api.core import SQL_KEYS
 from machineMonitor.api.core import MATCHING_OUT_TYPES
+from machineMonitor.api.core import security
 
 # ==== global ==== #
 print(f"Loading FastAPI app from: {__file__}")
 
 app = FastAPI()  # lowerCase -> conventional
-security = HTTPBearer()  # get token from URL Authorization header
 
 
 @app.post("/create", status_code=status.HTTP_204_NO_CONTENT,  summary="add line from given type and data")
-def createRecord(request):
+def createRecord(request: Request):
     """
     add a record from the specified table.
 
@@ -66,7 +65,7 @@ def createRecord(request):
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    recordData = parsed.dict()
+    recordData = parsed.model_dump()
 
     # Insert into database
     try:
@@ -80,7 +79,7 @@ def createRecord(request):
 
 
 @app.delete("/delete", status_code=status.HTTP_204_NO_CONTENT, summary="Delete item from given type and primaryKey")
-def deleteRecord(request):
+def deleteRecord(request: Request):
     """
     add a record from the specified table.
 
@@ -109,7 +108,7 @@ def deleteRecord(request):
 
 
 @app.get("/ask", response_model=list[dict], summary="search from filters")
-def dynamicRequest(credentials=Depends(security), request=None):
+def dynamicRequest(credentials: HTTPAuthorizationCredentials=Depends(security), request: Request=None):
     """
     Retrieve machines with optional filters from query string.
 
@@ -133,7 +132,7 @@ def dynamicRequest(credentials=Depends(security), request=None):
     cmds = {}
     for table, filtersData in tableData.items():
         if table == 'logs':
-            filtersData['userName'] = getAllowedNames(credentials, filtersData)
+            filtersData['userName'] = getAllowedNames(filtersData, credentials)
 
         if not filtersData:
             result.extend(getAllRows(DB_PATH, table))
@@ -148,7 +147,7 @@ def dynamicRequest(credentials=Depends(security), request=None):
 
 
 @app.put("/update", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
-def updateRecord(request):
+def updateRecord(request: Request):
     """
     update a record from the specified table.
 
@@ -178,7 +177,7 @@ def updateRecord(request):
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    recordData = parsed.dict()
+    recordData = parsed.model_dump()
 
     try:
         updateLine(DB_PATH, tableType, recordData)

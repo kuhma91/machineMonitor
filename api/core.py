@@ -8,18 +8,23 @@ description:
 """
 # ==== native ==== #
 import os
-import json
+import ast
 from datetime import datetime
 
 # ==== third ==== #
+from fastapi import Depends
+from fastapi import Request
+from fastapi.security import HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
+
+# ==== local ===== #
+
 from machineMonitor.api.models import Machine
 from machineMonitor.api.models import MachineIn
 from machineMonitor.api.models import Log
 from machineMonitor.api.models import LogIn
 from machineMonitor.api.models import Employ
 from machineMonitor.api.models import EmployIn
-
-# ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
 from machineMonitor.library.general.sqlLib import getTableFromDb
 from machineMonitor.library.general.sqlLib import getRowAsDict
@@ -34,6 +39,7 @@ MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log, 'employs': Employ}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn, 'employs': EmployIn}
 AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 SQL_KEYS = ['limit', 'offset', 'orderBy', 'descending', 'like', 'iLike']
+security = HTTPBearer()  # get token from URL Authorization header
 
 
 def formatSqlModifiers(sqlData):
@@ -64,14 +70,14 @@ def formatSqlModifiers(sqlData):
     return ' '.join(parts)
 
 
-def getAllowedNames(credentials, data):
+def getAllowedNames(data, credentials : HTTPAuthorizationCredentials=Depends(security)):
     """
     Retrieve list of authorized usernames based on credentials and request data.
 
-    :param credentials: Security credentials containing user token.
-    :type credentials: HTTPAuthorizationCredentials
     :param data: Dictionary possibly containing 'userName' to filter on.
     :type data: dict
+    :param credentials: Security credentials containing user token.
+    :type credentials: HTTPAuthorizationCredentials
 
     :return: List of authorized trigram names, or error message if token invalid.
     :rtype: list[str] | str
@@ -123,21 +129,12 @@ def getDataTypesAndColumns(data):
     :return: Dictionary mapping each valid table name to a sub-dictionary of matching column data.
     :rtype: dict
     """
-    dataTypes = data.get('dataType')
-    allTables = getTableFromDb(DB_PATH)
-    if not dataTypes:
-        tables = allTables
-
-    else:
-        if isinstance(dataTypes, str):
-            dataTypes = [dataTypes]
-
-        tables = [t for t in allTables if t in dataTypes]
+    tables = getTables(data)
 
     result = {}
-    for table in tables:
-        columns = getAllColumns(DB_PATH, table)
-        result[table] = {k: v for k, v in data.items() if k in columns}
+    for tableType in tables:
+        columns = getAllColumns(DB_PATH, tableType)
+        result[tableType] = {k: v for k, v in data.items() if k in columns}
 
     return result
 
@@ -257,6 +254,38 @@ def getRequestCmd(dataType, data=None, sqlData=None):
     return cmd.strip(), tuple(values)
 
 
+def getTables(data):
+    """
+    Retrieve a list of table names based on the 'dataType' field in the input data.
+
+    :param data: Dictionary potentially containing a 'dataType' key (str or list-like string).
+    :type data: dict
+
+    :return: List of matching table names from the database.
+    :rtype: list[str]
+    """
+    dataType = data.get('dataType')
+    allTables = getTableFromDb(DB_PATH)
+
+    if not dataType:
+        tables = allTables  # No filter, return all tables
+
+    else:
+        try:
+            # Try to parse stringified list
+            dataTypes = ast.literal_eval(dataType)
+            if not isinstance(dataTypes, list):
+                dataTypes = [dataTypes]
+
+        except Exception:
+            dataTypes = [dataType]  # Fallback if eval fails
+
+        # Filter only matching tables
+        tables = [t for t in allTables if t in dataTypes]
+
+    return tables
+
+
 def getUnSerializedValue(dataType, data, inModel=False):
     """
     Retrieve and deserialize a database record into a Pydantic output model.
@@ -280,7 +309,7 @@ def getUnSerializedValue(dataType, data, inModel=False):
     return cmd[dataType](**row)
 
 
-def hasAccess(credentials):
+def hasAccess(credentials : HTTPAuthorizationCredentials=Depends(security)):
     """
     Check if the user has a valid token and belongs to an authorized role.
 
