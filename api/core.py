@@ -8,17 +8,14 @@ description:
 """
 # ==== native ==== #
 import os
-import pprint
+import json
 from datetime import datetime
-from starlette.requests import Request
-from starlette.datastructures import QueryParams
 
 # ==== third ==== #
 from machineMonitor.api.models import Machine
 from machineMonitor.api.models import MachineIn
 from machineMonitor.api.models import Log
 from machineMonitor.api.models import LogIn
-from fastapi import Query
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
@@ -33,6 +30,8 @@ PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn}
+EMPLOYS_DATA = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'data', 'users', 'employs.json')
+AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 
 
 def getInfo(dataType, filters):
@@ -154,7 +153,7 @@ def formatSqlModifiers(sqlData):
     return ' '.join(parts)
 
 
-def getRequestCmd(dataType, data, sqlData):
+def getRequestCmd(dataType, data=None, sqlData=None):
     """
     Build a SQL SELECT command with parameterized WHERE filters.
 
@@ -168,30 +167,36 @@ def getRequestCmd(dataType, data, sqlData):
     :return: A tuple with the SQL command string and the corresponding values.
     :rtype: tuple[str, tuple]
     """
-    # Build the WHERE clause with placeholders
-    whereClause = ' AND '.join([f'{k} = ?' for k in data])
-    cmd = f"SELECT * FROM {dataType}"
-    if whereClause:
-        cmd += f" WHERE {whereClause}"
-
-    likes = sqlData.get('like', {})
-    if likes:
-        cmd += ' AND ' + ' AND '.join([f'{x} ILIKE ?' if sqlData.get('iLike') else f'{x} LIKE ?' for x in likes])
-
-    # Add tri/pagination
-    cmd += ' ' + formatSqlModifiers(sqlData)
-
     values = []
-    for v in data.values():
-        # Convert booleans to ints and others to strings
-        if isinstance(v, bool):
-            values.append(1 if v else 0)
-            continue
+    whereParts = []
 
-        values.append(str(v))
+    if data:
+        for k, v in data.items():
+            if isinstance(v, str):
+                whereParts.append(f'{k} = ?')
+                values.append(v)
 
+            elif isinstance(v, bool):
+                whereParts.append(f'{k} = ?')
+                values.append(1 if v else 0)
+
+            elif isinstance(v, list):
+                placeholders = ', '.join(['?'] * len(v))
+                whereParts.append(f'{k} IN ({placeholders})')
+                values.extend(v)
+
+    cmd = f"SELECT * FROM {dataType}"
+
+    if whereParts:
+        cmd += ' WHERE ' + ' AND '.join(whereParts)
+
+    likes = sqlData.get('like', {}) if sqlData else None
     if likes:
+        likeParts = [f'{x} ILIKE ?' if sqlData.get('iLike') else f'{x} LIKE ?' for x in likes]
+        cmd += ' AND ' + ' AND '.join(likeParts)
         values.extend([f'%{x}%' for x in likes.values()])
+
+    cmd += ' ' + formatSqlModifiers(sqlData)
 
     return cmd.strip(), tuple(values)
 
@@ -219,3 +224,72 @@ def getRelatedTables(data):
         tables[table] = {k: v for k, v in data.items() if k in columns}
 
     return tables
+
+
+def getAllUserInfo():
+    """
+    Load and return all user information indexed by token.
+
+    :return: Dictionary with token as key and user info as value.
+    :rtype: dict
+    """
+    with open(EMPLOYS_DATA, 'r', encoding='utf-8') as f:
+        return {v['token']: v for v in json.load(f).values()}
+
+
+def getAllowedNames(credentials, data):
+    """
+    Retrieve list of authorized usernames based on credentials and request data.
+
+    :param credentials: Security credentials containing user token.
+    :type credentials: HTTPAuthorizationCredentials
+    :param data: Dictionary possibly containing 'userName' to filter on.
+    :type data: dict
+
+    :return: List of authorized trigram names, or error message if token invalid.
+    :rtype: list[str] | str
+    """
+    token = credentials.credentials
+    allUserInfo = getAllUserInfo()
+    userInfo = allUserInfo.get(token)
+    if not userInfo:
+        return "Invalid or missing token"  # unrecognized user
+
+    authorisation = userInfo['authorisation']
+    if authorisation == 'operator':
+        return [userInfo['trigram']]
+
+    currentUser = userInfo.get('trigram')
+    allowedAuthors = ['operator'] if authorisation == 'lead' else ['operator', 'lead']
+
+    allowed = [v['trigram'] for v in allUserInfo.values() if v['authorisation'] in allowedAuthors]
+    if currentUser:
+        allowed.extend([v['trigram'] for v in allUserInfo.values() if v['trigram'] == currentUser])
+
+    wanted = data.get('userName', None)
+    if not wanted:
+        return allowed
+
+    wantedUsers = [wanted] if isinstance(wanted, str) else wanted
+
+    return [x for x in wantedUsers if x in allowed]
+
+
+def hasAccess(credentials):
+    """
+    Check if the user has a valid token and belongs to an authorized role.
+
+    :param credentials: Security credentials containing user token.
+    :type credentials: HTTPAuthorizationCredentials
+
+    :return: True if the user has access, False otherwise.
+    :rtype: bool
+    """
+    token = credentials.credentials
+
+    usersInfo = getAllUserInfo()
+    userData = usersInfo.get(token)
+    if not userData:
+        return False
+
+    return userData.get('authorisation') in AUTHORISATIONS

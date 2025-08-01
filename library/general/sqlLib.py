@@ -22,7 +22,7 @@ def execMultiRequests(dbPath, cmds):
     :param dbPath: Filesystem path to the SQLite database file.
     :type dbPath: str
     :param cmds: Mapping of table names to SQL command strings.
-    :type cmds: dict[str, str]
+    :type cmds: dict[str, tuple[str, tuple]]
 
     :return: List of row dictionaries with an added 'dataType' field.
     :rtype: list[dict]

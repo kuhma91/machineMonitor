@@ -7,12 +7,17 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
+import os
+import json
 
 # ==== third ==== #
 from fastapi import FastAPI
 from fastapi import status
 from fastapi import Request
+from fastapi import Depends
 from fastapi import HTTPException
+from fastapi.security import HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
@@ -23,9 +28,9 @@ from machineMonitor.library.general.sqlLib import updateLine
 from machineMonitor.library.general.sqlLib import createLine
 from machineMonitor.library.general.sqlLib import deleteLine
 from machineMonitor.library.general.sqlLib import execMultiRequests
-from machineMonitor.api.core import getUnSerializedValue
+from machineMonitor.api.core import getUnSerializedValue, hasAccess
+from machineMonitor.api.core import getAllowedNames
 from machineMonitor.api.core import logInToDict
-from machineMonitor.api.core import getInfo
 from machineMonitor.api.core import getRelatedTables
 from machineMonitor.api.core import getRequestCmd
 from machineMonitor.api.core import DB_PATH
@@ -34,6 +39,7 @@ from machineMonitor.api.core import DB_PATH
 print(f"Loading FastAPI app from: {__file__}")
 
 app = FastAPI()  # lowerCase -> conventional
+security = HTTPBearer()  # get token from URL Authorization header
 
 
 @app.post("/{dataType}", status_code=status.HTTP_204_NO_CONTENT,  summary="add line from given type and data")
@@ -74,10 +80,12 @@ def deleteRecord(dataType, pk):
 
 
 @app.get("/{dataType}", response_model=list[dict], summary="search from filters")
-def dynamicRequest(dataType=None, request=None, limit=None, offset=None, orderBy=None, descending=False, like=None, iLike=None):
+def dynamicRequest(credentials=Depends(security), dataType=None, request=None, limit=None, offset=None, orderBy=None, descending=False, like=None, iLike=None):
     """
     Retrieve machines with optional filters from query string.
 
+    :param credentials: Token credentials extracted from the HTTP Authorization header.
+    :type credentials: fastapi.security.HTTPAuthorizationCredentials
     :param dataType: Name of the table ('machines' or 'logs').
     :type dataType: str
     :param request: FastAPI request object containing query_params.
@@ -102,6 +110,11 @@ def dynamicRequest(dataType=None, request=None, limit=None, offset=None, orderBy
         'limit': limit, 'offset': offset, 'orderBy': orderBy, 'descending': descending, 'like': like, 'iLike': iLike
     }
 
+    if not hasAccess(credentials):
+        raise HTTPException(status_code=401, detail="Invalid or missing token")  # unrecognized user
+
+    data = dict(request.query_params)
+
     cmds = {}
     # If a specific table is requested
     if dataType:
@@ -109,11 +122,14 @@ def dynamicRequest(dataType=None, request=None, limit=None, offset=None, orderBy
         if not isTableExists(DB_PATH, dataType):
             raise ValueError(f'{dataType} does not exist in : {DB_PATH}')
 
+        if dataType == 'logs':
+            data['userName'] = getAllowedNames(credentials, data)
+
         # no filters provided: return full table
         if not request:
             return getAllRows(DB_PATH, dataType)
 
-        cmds[dataType] = getRequestCmd(dataType, dict(request.query_params), sqlData)
+        cmds[dataType] = getRequestCmd(dataType, data, sqlData)
 
     else:
         # No specific table, but no filters: return all rows from all tables
@@ -130,6 +146,9 @@ def dynamicRequest(dataType=None, request=None, limit=None, offset=None, orderBy
         # Determine which tables the filter keys belong to
         tables = getRelatedTables(dict(request.query_params))
         for table, relatedFilters in tables.items():
+            if table == 'logs':
+                relatedFilters['userName'] = getAllowedNames(credentials, data)
+
             # build a SELECT command per matching table
             cmds[table] = getRequestCmd(table, relatedFilters, sqlData)
 
