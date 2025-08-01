@@ -85,7 +85,6 @@ def getAuthorisation():
     """
     user = os.getlogin().lower()
     employeesData = getEmployeesData()
-
     if user not in employeesData:
         return 'user'
 

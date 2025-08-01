@@ -345,4 +345,4 @@ class LogViewer:
 
 
 if __name__ == "__main__":
-    Logger()
+    LogViewer()
