@@ -50,7 +50,14 @@ Le projet s’organise autour d’une architecture modulaire Python/PySide2/SQLi
 | `api`          | Accès distant aux données via FastAPI         | API REST          |
 | `sqlLib`       | Accès centralisé aux données SQLite           | Backend SQLite    |
 
+```
+┌─────────────┐ ┌──────────────┐ ┌────────────────┐ ┌────────┐ ┌─────┐
+│ Utilisateur │→│ TokenManager │→│ MachineManager │→│ Logger │→│ API │
+└─────────────┘ └──────────────┘ └────────────────┘ └────────┘ └─────┘
+```
+
 Ces outils interagissent avec une **base de données locale** (JSON et SQLite) et peuvent être facilement migrés vers un serveur ou scalés à distance.
+
 
 **Approche choisie :**
 
@@ -72,18 +79,18 @@ Chacun peut fonctionner **indépendamment**, mais ils partagent :
 
 
 ```
-     ┌──────────────┐
-     │ Utilisateur  │
-     └────┬─────────┘
-          │ (UI)
-     ┌────▼─────┐                 ┌──────────────┐
-     │ PySide2  │  <----------->  │  FastAPI     │
-     └────┬─────┘                 └──────────────┘
-          │                           │
-          ▼                           ▼
-  ┌──────────────┐        ┌─────────────────────┐
-  │ JSON (local) │  <-->  │ SQLite (SQL Sync)   │
-  └──────────────┘        └─────────────────────┘
+                              ┌──────────────┐
+                              │ Utilisateur  │
+                              └────┬─────────┘
+                                   │ (UI: logger, etc.)
+                              ┌────▼─────┐                 ┌──────────────┐
+                              │ PySide2  │  <----------->  │  FastAPI     │ ←→ API CRUD, filtres, sécurité
+                              └────┬─────┘                 └──────────────┘
+                                   │                           │
+                                   ▼                           ▼
+                               ┌──────────────┐        ┌─────────────────────┐
+ synchro → SQLite (init_db) ←→ │ JSON (local) │  <-->  │ SQLite (SQL Sync)   │ ←→ Accès via sqlLib
+                               └──────────────┘        └─────────────────────┘
 ```
 
 ---
