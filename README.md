@@ -11,7 +11,6 @@
    - [4.2 Machine Manager](#42-machine-manager)
    - [4.3 Logger](#43-logger)
    - [4.4 API (FastAPI)](#44-api-fastapi)
-   - [4.5 Base de données SQLite](#45-base-de-données-sqlite)
 5. [Glossaire et annexes](#5-glossaire-et-annexes)
 
 ---
