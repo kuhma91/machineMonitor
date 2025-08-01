@@ -620,4 +620,40 @@ requests.get("http://localhost:8000/machines")
 - Les filtres GET sont adaptés automatiquement aux champs
 - Le code est testé via `TestClient` et des exemples de requêtes sont fournis
 
+---
 
+### 5. Glossaire et annexes
+
+#### Glossaire
+
+| Terme | Définition |
+|------|------------|
+| **CRUD** | Create, Read, Update, Delete – opérations de base sur des données. |
+| **Token** | Identifiant temporaire ou permanent représentant un utilisateur (authentification, traçabilité). |
+| **Pydantic** | Librairie Python pour la validation de données via des modèles. |
+| **FastAPI** | Framework web moderne et rapide pour créer des APIs REST en Python. |
+| **SQLite** | Base de données locale légère et portable, stockée dans un fichier `.db`. |
+| **JSON** | Format de données texte, structuré en paires clé/valeur. |
+| **UI** | User Interface – interface graphique pour l'utilisateur. |
+| **Endpoint** | Point d’accès à une route d’API (ex: `/api/machines`). |
+| **Logger** | Système de journalisation : enregistre des événements, actions ou erreurs. |
+| **Filtering** | Processus de tri ou de sélection de données selon des critères définis. |
+
+---
+
+#### Annexes techniques
+
+- `logger_cahier_des_charges.md` : cahier des charges initial du module Logger.
+- Notes de formation SQL/API : disponibles dans `/data/notes/`
+  - `1 - Modelisation Sql.pdf`
+  - `2 - Sql Commandes.pdf`
+  - `5 - Api Fastapi.pdf`
+  - `8 - Filtres Dynamiques.pdf`, etc.
+
+---
+
+#### Références croisées internes
+
+- Les noms des machines doivent correspondre aux fichiers dans `/data/machines/`
+- Les logs sont stockés dans `/data/logs/` avec nom UUID
+- Tous les utilisateurs doivent être enregistrés dans `/data/employs/*.json` pour apparaître dans les interfaces
