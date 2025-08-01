@@ -354,3 +354,136 @@ python -m machineMonitor.machineManager.main
 Aucun contrôle intégré dans ce module — doit être couplé à un `TokenManager` ou équivalent pour limiter les droits d’accès aux actions critiques (`edit`, `delete`).
 
 ---
+
+### 4.3 token Manager
+#### Module : Logger (core + UI + Viewer)
+
+
+#### Problématique ciblée
+
+Dans un environnement industriel, la traçabilité des actions humaines est essentielle. Le logger permet :
+
+- de garder une trace des interventions, incidents, entretiens ou remarques,
+- de dater, structurer et centraliser les commentaires,
+- de réduire la perte d'information sur les opérations manuelles.
+
+Ce module vise à fournir un carnet de bord digital associé aux machines, exploitables aussi bien par les opérateurs que par les superviseurs.
+
+---
+
+#### Intégration dans le workflow
+
+Le `Logger` est un module transversal :
+
+- alimenté via une interface UI (commentaire horodaté sur une machine ou un poste),
+- lié à l'utilisateur actif (via nom ou token),
+- les données sont stockées localement au format JSON, puis synchronisées avec SQLite pour un usage API.
+
+Il est utilisé :
+
+- en local via UI PySide2
+- en lecture depuis l'API REST (endpoints logs)
+
+---
+
+#### Utilisateurs ciblés
+
+- Opérateurs : saisie des commentaires sur machine/poste
+- Responsables : validation, complétion, vérification des historiques
+- Maintenance / QSE : exploitation des logs pour analyse
+
+---
+
+#### Fonctions principales et validation
+
+##### Interface UI (`logger.ui`)
+
+- Liste des machines disponibles
+- Zone de saisie texte pour le commentaire
+- Menu déroulant pour catégorie/type d'intervention
+- Boutons `add`, `edit`, `delete`, `save`
+- Champs de date, heure, utilisateur auto-remplis
+
+Validations assurées :
+
+- pas d'écriture sans texte ou machine sélectionnée
+- modification impossible si log verrouillé
+- suppression avec confirmation
+
+##### Fonctionnement général (`logger.main`)
+
+- `mode`: read / write / edit
+- `loadLogs()` : lecture des JSON
+- `saveLog()` : écriture ou mise à jour du fichier log (UUID)
+- `filterLogs()` : permet la recherche par machine, date, utilisateur
+
+##### Backend (`logger.core`)
+
+- `getAllLogs()` : parse tous les fichiers JSON dans `/data/logs`
+- `addLogEntry()` : crée un fichier avec UUID, timestamp, metadata, commentaire
+- `deleteLogEntry()` : supprime un fichier spécifique
+- `updateLogEntry()` : édite un commentaire
+
+##### Viewer (inclus dans UI)
+
+- Liste des logs triables par date
+- Filtres dynamiques (par utilisateur, machine, type d'intervention)
+- Affichage du contenu en mode lecture seule
+
+Testé manuellement :
+
+- ajout, modification, suppression
+- tri et filtre
+- comportement en erreur (machine absente, champ vide)
+
+---
+
+#### Lien avec les autres outils
+
+- **MachineManager** : chaque machine dispose de ses propres logs historisés
+- **TokenManager** : le champ "utilisateur" peut être prérempli via token actif
+- **API** : tous les logs sont synchronisés dans la base SQLite pour consultation via requêtes REST (GET /logs)
+
+---
+
+#### Utilisation concrète
+
+##### Lancer le logger
+
+```bash
+python -m machineMonitor.logger.main
+```
+
+##### Ajouter un log
+
+- Sélectionner une machine
+- Renseigner le type et le commentaire
+- Cliquer sur `save`
+
+##### Modifier ou supprimer
+
+- Sélectionner un log existant
+- Cliquer sur `edit` ou `delete` puis valider
+
+##### Utiliser les filtres
+
+- Choisir des critères dans les menus déroulants
+- Les logs affichés s’adaptent dynamiquement
+
+---
+
+#### Données utilisées
+
+- `data/logs/*.json` : 1 fichier par log (nommé via UUID)
+
+```json
+{
+  "uuid": "8300c91a-fc2b-43d8-93ac-4d1b33b82fdb",
+  "timestamp": "2025-07-25T14:37:00",
+  "machine": "toto",
+  "user": "antoine",
+  "type": "maintenance",
+  "comment": "changement de buse fait."
+}
+```
+
