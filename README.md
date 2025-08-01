@@ -355,7 +355,7 @@ Aucun contrôle intégré dans ce module — doit être couplé à un `TokenMana
 
 ---
 
-### 4.3 token Manager
+### 4.3 Logger
 #### Module : Logger (core + UI + Viewer)
 
 
