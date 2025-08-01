@@ -19,7 +19,7 @@ import secrets
 # ==== global ==== #
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])
 ICON_FOLDER = os.path.join(BASE_FOLDER, 'icon')
-USER_DATA = os.path.join(BASE_FOLDER, 'data', 'users', f'employs.json')
+EMPLOYS_FOLDER = os.path.join(BASE_FOLDER, 'data', 'employs')
 TOKEN_BUTTONS = ['new']
 AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 TOKEN_LENGTH = 32
@@ -69,39 +69,44 @@ def generateTrigram(firstName, lastName):
 
 def getUsers():
     """
-    Load user data from the USER_DATA JSON file.
+    Load user data from the USER_FOLDER path
 
     :return: user data, or empty dict if file doesn't exist.
     :rtype: dict
     """
-    if not os.path.exists(USER_DATA):
+    if not os.path.exists(EMPLOYS_FOLDER):
         return {}
 
-    with open(USER_DATA, 'r', encoding='utf-8') as f:
-        return json.load(f)
+    data = {}
+    for name in os.listdir(EMPLOYS_FOLDER):
+        if not name.endswith('.json'):
+            continue
+
+        shortName = os.path.splitext(name)[0]
+        jsonPath = os.path.join(EMPLOYS_FOLDER, name)
+        with open(jsonPath, 'r', encoding='utf-8') as f:
+            data[shortName] = json.load(f)
+
+    return data
 
 
 def saveData(newValue, relatedData):
     """
-    Save or update user data in the USER_DATA JSON file.
+    Save or update user data in the EMPLOYS_FOLDER JSON file.
 
     :param newValue: Key to identify the user entry.
     :type newValue: str
     :param relatedData: Dictionary containing the user-related data.
     :type relatedData: dict
     """
-    currentData = getUsers()
+    if not os.path.exists(EMPLOYS_FOLDER):
+        os.makedirs(EMPLOYS_FOLDER)
+        print(f'created : {EMPLOYS_FOLDER}')
 
-    folder = os.path.split(USER_DATA)[0]
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-        print(f'created : {folder}')
-
-    currentData[newValue] = relatedData
-
+    jsonPath = os.path.join(EMPLOYS_FOLDER, f'{newValue}.json')
     try:
-        with open(USER_DATA, 'w', encoding='utf-8') as f:
-            json.dump(currentData, f)
+        with open(jsonPath, 'w', encoding='utf-8') as f:
+            json.dump(relatedData, f)
             print(f'saved : {newValue}')
 
     except Exception as e:

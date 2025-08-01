@@ -141,11 +141,11 @@ def getEmployeesData():
     """
     data = {}
 
-    employeesFile = os.path.join(DATA_REPO, 'users', 'employs.json')
-    if not os.path.exists(employeesFile):
+    employsFile = os.path.join(DATA_REPO, 'employs', 'employs.json')
+    if not os.path.exists(employsFile):
         return data
 
-    with open(employeesFile, 'r', encoding='utf-8') as f:
+    with open(employsFile, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
         result = {}

@@ -42,6 +42,14 @@ class Log(BaseModel):
     modifications: list[tuple[str,str]] | None = None
 
 
+class User(BaseModel):
+    token: str
+    first_name: str
+    last_name: str
+    trigram : str
+    authorisation : str
+
+
 class MachineIn(BaseModel):
     name: str
     sector: str
@@ -58,3 +66,11 @@ class LogIn(BaseModel):
     type: str
     project: str
     comment: Optional[str] = None
+
+
+class UserIn(BaseModel):
+    token: str
+    first_name: str
+    last_name: str
+    trigram : str
+    authorisation : str

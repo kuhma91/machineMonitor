@@ -30,7 +30,7 @@ PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn}
-EMPLOYS_DATA = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'data', 'users', 'employs.json')
+EMPLOYS_FOLDER = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'data', 'employs')
 AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 SQL_KEYS = ['limit', 'offset', 'orderBy', 'descending', 'like', 'iLike']
 

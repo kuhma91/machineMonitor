@@ -36,7 +36,17 @@ CREATE TABLE IF NOT EXISTS logs(
     type TEXT NOT NULL,
     userName TEXT NOT NULL,
     modifications TEXT,
-    FOREIGN KEY(machineName) REFERENCES machines(name)
+    FOREIGN KEY(machineName) REFERENCES machines(name),
+    FOREIGN KEY(userName) REFERENCES employs(trigram)
+);
+
+
+CREATE TABLE IF NOT EXISTS employs(
+    trigram TEXT PRIMARY KEY,
+    token TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    authorisation TEXT
 );
 '''
 
