@@ -18,7 +18,6 @@ from fastapi import Request
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import HTTPBearer
-from fastapi.security import HTTPAuthorizationCredentials
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
@@ -35,6 +34,7 @@ from machineMonitor.api.core import logInToDict
 from machineMonitor.api.core import hasAccess
 from machineMonitor.api.core import DB_PATH
 from machineMonitor.api.core import SQL_KEYS
+from machineMonitor.api.core import MATCHING_OUT_TYPES
 
 # ==== global ==== #
 print(f"Loading FastAPI app from: {__file__}")
@@ -43,38 +43,66 @@ app = FastAPI()  # lowerCase -> conventional
 security = HTTPBearer()  # get token from URL Authorization header
 
 
-@app.post("/{dataType}", status_code=status.HTTP_204_NO_CONTENT,  summary="add line from given type and data")
-def createRecord(dataType, data):
+@app.post("/create", status_code=status.HTTP_204_NO_CONTENT,  summary="add line from given type and data")
+def createRecord(request):
     """
     add a record from the specified table.
 
-    :param dataType: Name of the table ('machines' or 'logs').
-    :type dataType: str
-    :param data: provided by the user to create a machine.
-    :type data: LogIn
+    :param request: FastAPI request object containing query_params.
+    :type request: Request
     """
-    # convert Login as dict
-    recordDict = logInToDict(data, dataType)
+    data = dict(request.query_params)
+
+    tableType = data.get('tableType')
+    if not tableType:
+        raise HTTPException(status_code=422, detail='missing value : "tableType"')
+
+    model = MATCHING_OUT_TYPES.get(tableType)
+    if not model:
+        raise HTTPException(status_code=422, detail=f'unknown table: {tableType}')
+
+    try:
+        parsed = model(**{k: v for k, v in data.items() if k != 'tableType'})
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    recordData = parsed.dict()
 
     # Insert into database
-    createLine(DB_PATH, dataType, recordDict)
+    try:
+        createLine(DB_PATH, tableType, recordData)
+
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     # get new created row
-    return getUnSerializedValue(dataType, recordDict, True)
+    return getUnSerializedValue(tableType, recordData, True)
 
 
-@app.delete("/{dataType}/{pk}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete item from given type and primaryKey")
-def deleteRecord(dataType, pk):
+@app.delete("/delete", status_code=status.HTTP_204_NO_CONTENT, summary="Delete item from given type and primaryKey")
+def deleteRecord(request):
     """
-    Delete a record from the specified table.
+    add a record from the specified table.
 
-    :param dataType: Name of the table ('machines' or 'logs').
-    :type dataType: str
-    :param pk: Primary key of the record to delete.
-    :type pk: str
+    :param request: FastAPI request object containing query_params.
+    :type request: Request
     """
+    data = dict(request.query_params)
+
+    tableType = data.get('tableType')
+    if not tableType:
+        raise HTTPException(status_code=422, detail='missing : tableType')
+
+    primaryColumn = getPrimaryColumn(DB_PATH, tableType)
+    if not primaryColumn:
+        raise HTTPException(status_code=422, detail=f'no primary column found for : {tableType}')
+
+    pk = data.get(primaryColumn)
+    if not pk:
+        raise HTTPException(status_code=422, detail=f'missing primaryColumn un data: {primaryColumn}')
+
     try:
-        deleteLine(DB_PATH, dataType, pk)
+        deleteLine(DB_PATH, tableType, pk)
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -119,32 +147,46 @@ def dynamicRequest(credentials=Depends(security), request=None):
     return result
 
 
-@app.put("/{dataType}/{pk}", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
-def updateRecord(dataType, pk, data):
+@app.put("/update", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
+def updateRecord(request):
     """
     update a record from the specified table.
 
-    :param dataType: Name of the table ('machines' or 'logs').
-    :type dataType: str
-    :param pk: Primary key of the record to update
-    :type pk: str
-    :param data: Fields to update
-    :type data: LogIn
+    :param request: FastAPI request object containing query_params.
+    :type request: Request
     """
-    recordDict = logInToDict(data, dataType)
-    primaryColumn = getPrimaryColumn(DB_PATH, dataType)
+    data = dict(request.query_params)
 
-    # ensure PK in dict
-    if not recordDict[primaryColumn] == pk:
-        raise ValueError(f'given data does not match : {pk}')
+    tableType = data.get('tableType')
+    if not tableType:
+        raise HTTPException(status_code=422, detail='missing : tableType')
+
+    primaryColumn = getPrimaryColumn(DB_PATH, tableType)
+    if not primaryColumn:
+        raise HTTPException(status_code=422, detail=f'no primary column found for : {tableType}')
+
+    pk = data.get(primaryColumn)
+    if not pk:
+        raise HTTPException(status_code=422, detail=f'missing primaryColumn un data: {primaryColumn}')
+
+    model = MATCHING_OUT_TYPES.get(tableType)
+    if not model:
+        raise HTTPException(status_code=422, detail=f'unknown table: {tableType}')
 
     try:
-        updateLine(DB_PATH, dataType, recordDict)
+        parsed = model(**{k: v for k, v in data.items() if k != 'tableType'})
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    recordData = parsed.dict()
+
+    try:
+        updateLine(DB_PATH, tableType, recordData)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    return getUnSerializedValue(dataType, recordDict, True)
+    return getUnSerializedValue(tableType, recordData, True)
 
 
 print("Registered routes →", [route.path for route in app.routes])
