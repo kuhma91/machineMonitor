@@ -486,3 +486,138 @@ python -m machineMonitor.logger.main
 }
 ```
 
+---
+### 4.4 API (FastAPI)
+## Module : API REST
+
+### Problématique ciblée
+
+Permettre l'accès distant, l'automatisation et l'intégration des données machines et logs dans un système plus large (supervision, reporting, SaaS). L'objectif est de proposer une couche d'échange standardisée et sécurisée entre l'outil local et d'autres logiciels/services.
+
+---
+
+### Intégration dans le workflow
+
+L'API REST vient compléter les interfaces locales. Elle permet :
+
+- des appels GET pour consulter les données (machines, logs, utilisateurs)
+- des appels POST/PUT/DELETE pour modifier le contenu
+- l'ajout de filtres dynamiques et de pagination
+- un accès distant si l'app est déployée sur un serveur local ou cloud
+
+Utilisée en :
+
+- intégration avec dashboards externes
+- automatisation des contrôles / maintenances planifiées
+- couplage avec outils BI ou supervision
+
+---
+
+### Utilisateurs ciblés
+
+- Développeurs internes
+- Admins techniques
+- Services connectés (cloud, IoT, etc.)
+
+---
+
+### Fonctions principales et validation
+
+#### Endpoints REST (`api/main.py`)
+
+- `GET /machines` : liste des machines, filtres dynamiques
+- `GET /logs` : liste des logs, filtrage possible
+- `POST /machines` : ajout d’une machine
+- `PUT /machines/{name}` : modification
+- `DELETE /machines/{name}` : suppression
+- `GET /employs` : liste des utilisateurs
+- `GET /dashboard` : données combinées multi-table
+
+Validations :
+
+- tests avec FastAPI `TestClient` dans `test.py`
+- retours en JSON 200/404/422 selon cas
+- authentification à implémenter si déploiement public
+
+#### Filtres dynamiques (`api/core.py`)
+
+- `textDynamicsFilter(dataType, request)` : génération de clauses WHERE selon les params GET
+- `execMultiRequests(dbPath, cmds)` : envoie plusieurs requêtes en séquence
+
+#### Modèles de données (`api/models.py`)
+
+- `Machine`, `Log`, `Employ` : modèles Pydantic pour validation et documentation
+- `GenericResponse`, `ErrorResponse` : formats de réponse unifiés
+
+Validations :
+
+- les routes refusent les payloads invalides
+- chaque endpoint est typé et validé à l’entrée comme à la sortie
+
+#### Initialisation de la base (`data/init_db.py`)
+
+- Lecture des JSON (machines, logs, employs)
+- Création et remplissage automatique de `machineMonitor.db`
+- Tables créées si absentes
+- Possible à rejouer en cas de reset (idempotent)
+
+---
+
+### Lien avec les autres outils
+
+- **UI Qt** : les interfaces PySide2 utilisent les mêmes données que l’API
+- **Logger** : les logs peuvent être consultés ou injectés via API
+- **SQLite** : l’API interagit avec la base via des requêtes dynamiques
+- **Pydantic** : validation forte des entrées/sorties de route
+
+---
+
+### Utilisation concrète
+
+#### Lancer le serveur API
+
+```bash
+uvicorn api.main:app --reload
+```
+
+#### Appeler un endpoint avec `curl`
+
+```bash
+curl http://127.0.0.1:8000/machines
+curl -X POST http://127.0.0.1:8000/machines -H "Content-Type: application/json" -d '{"name": "toto", "sector": "1A", ...}'
+```
+
+#### Appeler depuis Python
+
+```python
+import requests
+requests.get("http://localhost:8000/machines")
+```
+
+---
+
+### Exemple de modèle Machine (Pydantic)
+
+```json
+{
+  "name": "toto",
+  "sector": "1A",
+  "usage": "CNC",
+  "manufacturer": "Mazak",
+  "serial_number": "123456",
+  "year_of_acquisition": "2020",
+  "in_service": "Oui",
+  "comment": "RAS"
+}
+```
+
+---
+
+### Notes techniques
+
+- Swagger dispo : `http://127.0.0.1:8000/docs`
+- OpenAPI JSON : `http://127.0.0.1:8000/openapi.json`
+- Les filtres GET sont adaptés automatiquement aux champs
+- Le code est testé via `TestClient` et des exemples de requêtes sont fournis
+
+
