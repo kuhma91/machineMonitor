@@ -32,6 +32,113 @@ MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn}
 EMPLOYS_DATA = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'data', 'users', 'employs.json')
 AUTHORISATIONS = ['operator', 'lead', 'supervisor']
+SQL_KEYS = ['limit', 'offset', 'orderBy', 'descending', 'like', 'iLike']
+
+
+def formatSqlModifiers(sqlData):
+    """
+    Format SQL modifiers such as ORDER BY, LIMIT, and OFFSET based on provided parameters.
+
+    :param sqlData: Dictionary containing optional SQL modifiers (orderBy, descending, limit, offset).
+    :type sqlData: dict[str, any]
+
+    :return: SQL modifiers string to append to a SELECT query.
+    :rtype: str
+    """
+    parts = []
+
+    orderBy = sqlData.get('orderBy')
+    if orderBy:
+        direction = 'DESC' if sqlData.get('descending') else 'ASC'
+        parts.append(f'ORDER BY {orderBy} {direction}')
+
+    limit = sqlData.get('limit')
+    if limit:
+        parts.append(f'LIMIT {int(limit)}')
+
+    offset = sqlData.get('offset')
+    if offset:
+        parts.append(f'OFFSET {int(offset)}')
+
+    return ' '.join(parts)
+
+
+def getAllowedNames(credentials, data):
+    """
+    Retrieve list of authorized usernames based on credentials and request data.
+
+    :param credentials: Security credentials containing user token.
+    :type credentials: HTTPAuthorizationCredentials
+    :param data: Dictionary possibly containing 'userName' to filter on.
+    :type data: dict
+
+    :return: List of authorized trigram names, or error message if token invalid.
+    :rtype: list[str] | str
+    """
+    token = credentials.credentials
+    allUserInfo = getAllUserInfo()
+    userInfo = allUserInfo.get(token)
+    if not userInfo:
+        return "Invalid or missing token"  # unrecognized user
+
+    authorisation = userInfo['authorisation']
+    if authorisation == 'operator':
+        return [userInfo['trigram']]
+
+    currentUser = userInfo.get('trigram')
+    allowedAuthors = ['operator'] if authorisation == 'lead' else ['operator', 'lead']
+
+    allowed = [v['trigram'] for v in allUserInfo.values() if v['authorisation'] in allowedAuthors]
+    if currentUser:
+        allowed.extend([v['trigram'] for v in allUserInfo.values() if v['trigram'] == currentUser])
+
+    wanted = data.get('userName', None)
+    if not wanted:
+        return allowed
+
+    wantedUsers = [wanted] if isinstance(wanted, str) else wanted
+
+    return [x for x in wantedUsers if x in allowed]
+
+
+def getAllUserInfo():
+    """
+    Load and return all user information indexed by token.
+
+    :return: Dictionary with token as key and user info as value.
+    :rtype: dict
+    """
+    with open(EMPLOYS_DATA, 'r', encoding='utf-8') as f:
+        return {v['token']: v for v in json.load(f).values()}
+
+
+def getDataTypesAndColumns(data):
+    """
+    Filter and organize input data based on database tables and their columns.
+
+    :param data: Dictionary containing input data, including 'dataType' (str or list) and possible table columns.
+    :type data: dict
+
+    :return: Dictionary mapping each valid table name to a sub-dictionary of matching column data.
+    :rtype: dict
+    """
+    dataTypes = data.get('dataType')
+    allTables = getTableFromDb(DB_PATH)
+    if not dataTypes:
+        tables = allTables
+
+    else:
+        if isinstance(dataTypes, str):
+            dataTypes = [dataTypes]
+
+        tables = [t for t in allTables if t in dataTypes]
+
+    result = {}
+    for table in tables:
+        columns = getAllColumns(DB_PATH, table)
+        result[table] = {k: v for k, v in data.items() if k in columns}
+
+    return result
 
 
 def getInfo(dataType, filters):
@@ -76,81 +183,29 @@ def getInfo(dataType, filters):
     return result
 
 
-def getUnSerializedValue(dataType, data, inModel=False):
+def getRelatedTables(data):
     """
-    Retrieve and deserialize a database record into a Pydantic output model.
+    Identify which tables contain the provided filter keys.
 
-    :param dataType: Name of the table ('machines' or 'logs').
-    :type dataType: str
-    :param data: Mapping containing the primary key field.
+    :param data: Mapping of filter keys to values.
     :type data: dict[str, any]
 
-    :return: Pydantic model instance for the requested record.
-    :rtype: BaseModel
+    :return: A dict mapping each matching table name to its subset of filters.
+    :rtype: dict[str, dict[str, any]]
     """
-    # determine primary key column for this table
-    primaryKey = getPrimaryColumn(DB_PATH, dataType)
-    # fetch raw row as dict
-    row = getRowAsDict(DB_PATH, dataType, data[primaryKey])
+    tables = {}
+    for table in getTableFromDb(DB_PATH):
+        # Fetch all column names for this table
+        columns = getAllColumns(DB_PATH, table)
+        # Determine which filters apply to this table
+        matching = [col for col in columns if col in data]
+        if not matching:
+            continue
 
-    # instantiate and return the correct Pydantic model
-    cmd = MATCHING_IN_TYPES if inModel else MATCHING_OUT_TYPES
+        # Determine which filters apply to this table
+        tables[table] = {k: v for k, v in data.items() if k in columns}
 
-    return cmd[dataType](**row)
-
-
-def logInToDict(logIn, dataType):
-    """
-    Convert a Pydantic input model into a dict and add metadata for logs.
-
-    :param logIn: Pydantic model instance containing input data.
-    :type logIn: BaseModel
-    :param dataType: Name of the table ('machines' or 'logs').
-    :type dataType: str
-
-    :return: Serialized data dict ready for database insertion.
-    :rtype: dict[str, any]
-    """
-    data = logIn.model_dump()  # extract a dict from given LogIn
-
-    # if inserting into logs, add timestamp, user and uuid
-    if dataType == 'logs':
-        # Serialize incoming Pydantic model to dict
-        data.update({
-            'timeStamp': datetime.now().strftime('%Y_%m_%d__%H_%M_%S'),
-            'userName': os.getlogin(),
-            'uuid': getUUID()
-        })
-
-    return data
-
-
-def formatSqlModifiers(sqlData):
-    """
-    Format SQL modifiers such as ORDER BY, LIMIT, and OFFSET based on provided parameters.
-
-    :param sqlData: Dictionary containing optional SQL modifiers (orderBy, descending, limit, offset).
-    :type sqlData: dict[str, any]
-
-    :return: SQL modifiers string to append to a SELECT query.
-    :rtype: str
-    """
-    parts = []
-
-    orderBy = sqlData.get('orderBy')
-    if orderBy:
-        direction = 'DESC' if sqlData.get('descending') else 'ASC'
-        parts.append(f'ORDER BY {orderBy} {direction}')
-
-    limit = sqlData.get('limit')
-    if limit:
-        parts.append(f'LIMIT {int(limit)}')
-
-    offset = sqlData.get('offset')
-    if offset:
-        parts.append(f'OFFSET {int(offset)}')
-
-    return ' '.join(parts)
+    return tables
 
 
 def getRequestCmd(dataType, data=None, sqlData=None):
@@ -201,78 +256,27 @@ def getRequestCmd(dataType, data=None, sqlData=None):
     return cmd.strip(), tuple(values)
 
 
-def getRelatedTables(data):
+def getUnSerializedValue(dataType, data, inModel=False):
     """
-    Identify which tables contain the provided filter keys.
+    Retrieve and deserialize a database record into a Pydantic output model.
 
-    :param data: Mapping of filter keys to values.
+    :param dataType: Name of the table ('machines' or 'logs').
+    :type dataType: str
+    :param data: Mapping containing the primary key field.
     :type data: dict[str, any]
 
-    :return: A dict mapping each matching table name to its subset of filters.
-    :rtype: dict[str, dict[str, any]]
+    :return: Pydantic model instance for the requested record.
+    :rtype: BaseModel
     """
-    tables = {}
-    for table in getTableFromDb(DB_PATH):
-        # Fetch all column names for this table
-        columns = getAllColumns(DB_PATH, table)
-        # Determine which filters apply to this table
-        matching = [col for col in columns if col in data]
-        if not matching:
-            continue
+    # determine primary key column for this table
+    primaryKey = getPrimaryColumn(DB_PATH, dataType)
+    # fetch raw row as dict
+    row = getRowAsDict(DB_PATH, dataType, data[primaryKey])
 
-        # Determine which filters apply to this table
-        tables[table] = {k: v for k, v in data.items() if k in columns}
+    # instantiate and return the correct Pydantic model
+    cmd = MATCHING_IN_TYPES if inModel else MATCHING_OUT_TYPES
 
-    return tables
-
-
-def getAllUserInfo():
-    """
-    Load and return all user information indexed by token.
-
-    :return: Dictionary with token as key and user info as value.
-    :rtype: dict
-    """
-    with open(EMPLOYS_DATA, 'r', encoding='utf-8') as f:
-        return {v['token']: v for v in json.load(f).values()}
-
-
-def getAllowedNames(credentials, data):
-    """
-    Retrieve list of authorized usernames based on credentials and request data.
-
-    :param credentials: Security credentials containing user token.
-    :type credentials: HTTPAuthorizationCredentials
-    :param data: Dictionary possibly containing 'userName' to filter on.
-    :type data: dict
-
-    :return: List of authorized trigram names, or error message if token invalid.
-    :rtype: list[str] | str
-    """
-    token = credentials.credentials
-    allUserInfo = getAllUserInfo()
-    userInfo = allUserInfo.get(token)
-    if not userInfo:
-        return "Invalid or missing token"  # unrecognized user
-
-    authorisation = userInfo['authorisation']
-    if authorisation == 'operator':
-        return [userInfo['trigram']]
-
-    currentUser = userInfo.get('trigram')
-    allowedAuthors = ['operator'] if authorisation == 'lead' else ['operator', 'lead']
-
-    allowed = [v['trigram'] for v in allUserInfo.values() if v['authorisation'] in allowedAuthors]
-    if currentUser:
-        allowed.extend([v['trigram'] for v in allUserInfo.values() if v['trigram'] == currentUser])
-
-    wanted = data.get('userName', None)
-    if not wanted:
-        return allowed
-
-    wantedUsers = [wanted] if isinstance(wanted, str) else wanted
-
-    return [x for x in wantedUsers if x in allowed]
+    return cmd[dataType](**row)
 
 
 def hasAccess(credentials):
@@ -293,3 +297,29 @@ def hasAccess(credentials):
         return False
 
     return userData.get('authorisation') in AUTHORISATIONS
+
+
+def logInToDict(logIn, dataType):
+    """
+    Convert a Pydantic input model into a dict and add metadata for logs.
+
+    :param logIn: Pydantic model instance containing input data.
+    :type logIn: BaseModel
+    :param dataType: Name of the table ('machines' or 'logs').
+    :type dataType: str
+
+    :return: Serialized data dict ready for database insertion.
+    :rtype: dict[str, any]
+    """
+    data = logIn.model_dump()  # extract a dict from given LogIn
+
+    # if inserting into logs, add timestamp, user and uuid
+    if dataType == 'logs':
+        # Serialize incoming Pydantic model to dict
+        data.update({
+            'timeStamp': datetime.now().strftime('%Y_%m_%d__%H_%M_%S'),
+            'userName': os.getlogin(),
+            'uuid': getUUID()
+        })
+
+    return data

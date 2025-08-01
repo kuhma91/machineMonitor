@@ -3,7 +3,8 @@
 fileName: main.py
 scripter: angiu
 creation date: 29/07/2025
-description: 
+description:
+    - connexion : uvicorn machineMonitor.api.main:app --reload
 ===============================================================================
 """
 # ==== native ==== #
@@ -21,19 +22,19 @@ from fastapi.security import HTTPAuthorizationCredentials
 
 # ==== local ===== #
 from machineMonitor.library.general.sqlLib import getPrimaryColumn
-from machineMonitor.library.general.sqlLib import getTableFromDb
 from machineMonitor.library.general.sqlLib import getAllRows
-from machineMonitor.library.general.sqlLib import isTableExists
 from machineMonitor.library.general.sqlLib import updateLine
 from machineMonitor.library.general.sqlLib import createLine
 from machineMonitor.library.general.sqlLib import deleteLine
 from machineMonitor.library.general.sqlLib import execMultiRequests
-from machineMonitor.api.core import getUnSerializedValue, hasAccess
+from machineMonitor.api.core import getDataTypesAndColumns
+from machineMonitor.api.core import getUnSerializedValue
 from machineMonitor.api.core import getAllowedNames
-from machineMonitor.api.core import logInToDict
-from machineMonitor.api.core import getRelatedTables
 from machineMonitor.api.core import getRequestCmd
+from machineMonitor.api.core import logInToDict
+from machineMonitor.api.core import hasAccess
 from machineMonitor.api.core import DB_PATH
+from machineMonitor.api.core import SQL_KEYS
 
 # ==== global ==== #
 print(f"Loading FastAPI app from: {__file__}")
@@ -79,80 +80,43 @@ def deleteRecord(dataType, pk):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.get("/{dataType}", response_model=list[dict], summary="search from filters")
-def dynamicRequest(credentials=Depends(security), dataType=None, request=None, limit=None, offset=None, orderBy=None, descending=False, like=None, iLike=None):
+@app.get("/ask", response_model=list[dict], summary="search from filters")
+def dynamicRequest(credentials=Depends(security), request=None):
     """
     Retrieve machines with optional filters from query string.
 
     :param credentials: Token credentials extracted from the HTTP Authorization header.
     :type credentials: fastapi.security.HTTPAuthorizationCredentials
-    :param dataType: Name of the table ('machines' or 'logs').
-    :type dataType: str
     :param request: FastAPI request object containing query_params.
     :type request: Request
-    :param limit: max items number to return
-    :type limit: int
-    :param offset: items number to ignore before start to return
-    :type offset: int
-    :param orderBy: column name to sort result by
-    :type orderBy: str
-    :param descending: sorted or reversed
-    :type descending: bool
-    :param like: concerned column and related text that related cells have to contain
-    :type like: Request
-    :param iLike: is given like sensible to case (upper or lower)
-    :type iLike: bool
 
     :return: List of Machine instances matching filters.
     :rtype: list[dict]
     """
-    sqlData = {
-        'limit': limit, 'offset': offset, 'orderBy': orderBy, 'descending': descending, 'like': like, 'iLike': iLike
-    }
-
     if not hasAccess(credentials):
         raise HTTPException(status_code=401, detail="Invalid or missing token")  # unrecognized user
 
-    data = dict(request.query_params)
+    requestDict = dict(request.query_params)
+    tableData = getDataTypesAndColumns(requestDict)
+    sqlData = {k: v for k,v in requestDict.items() if k in SQL_KEYS}
+
+    result = []
 
     cmds = {}
-    # If a specific table is requested
-    if dataType:
-        # ensure the table exists
-        if not isTableExists(DB_PATH, dataType):
-            raise ValueError(f'{dataType} does not exist in : {DB_PATH}')
+    for table, filtersData in tableData.items():
+        if table == 'logs':
+            filtersData['userName'] = getAllowedNames(credentials, filtersData)
 
-        if dataType == 'logs':
-            data['userName'] = getAllowedNames(credentials, data)
+        if not filtersData:
+            result.extend(getAllRows(DB_PATH, table))
+            continue
 
-        # no filters provided: return full table
-        if not request:
-            return getAllRows(DB_PATH, dataType)
+        cmds[table] = getRequestCmd(table, filtersData, sqlData)
 
-        cmds[dataType] = getRequestCmd(dataType, data, sqlData)
+    if cmds:
+        result.extend(execMultiRequests(DB_PATH, cmds))
 
-    else:
-        # No specific table, but no filters: return all rows from all tables
-        if not request:
-            result = []
-            for table in getTableFromDb(DB_PATH):
-                for rowDict in getAllRows(DB_PATH, table):
-                    # annotate row with its source table
-                    rowDict['dataType'] = table
-                    result.append(rowDict)
-
-            return result
-
-        # Determine which tables the filter keys belong to
-        tables = getRelatedTables(dict(request.query_params))
-        for table, relatedFilters in tables.items():
-            if table == 'logs':
-                relatedFilters['userName'] = getAllowedNames(credentials, data)
-
-            # build a SELECT command per matching table
-            cmds[table] = getRequestCmd(table, relatedFilters, sqlData)
-
-    return execMultiRequests(DB_PATH, cmds)
+    return result
 
 
 @app.put("/{dataType}/{pk}", status_code=status.HTTP_204_NO_CONTENT,  summary="Update an existing record")
