@@ -5,9 +5,8 @@ from machineMonitor.library.infoLib import getImportsFromFile
 from machineMonitor.library.infoLib import getRequirements
 from machineMonitor.library.infoLib import REQUIREMENTS_FILE
 
-PROJECT_ROOT = os.sep.join(__file__.split(os.sep)[:-4])
+PROJECT_ROOT = os.sep.join(__file__.split(os.sep)[:-2])
 BASE_REPO = os.path.split(__file__)[0]
-GIT_WORKFLOW = os.path.join(BASE_REPO, '.github', 'workflows', 'python-ci.yml')
 NEEDED = ['uvicorn', 'flake8']
 
 
@@ -27,7 +26,7 @@ def updateRequirements():
 
     with open(REQUIREMENTS_FILE, 'w', encoding='utf-8') as f:
         f.writelines('\n'.join(needed))
-        print('requirement updated')
+        print(f'requirement updated : {REQUIREMENTS_FILE}')
 
 
 if __name__ == '__main__':
