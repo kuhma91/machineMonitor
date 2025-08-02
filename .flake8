@@ -2,13 +2,12 @@
 max-line-length = 200
 
 ignore =
-    W291,  # trailing whitespace
-    W292,  # no newline at end of file
-    E203,  # whitespace before ':'
-    E231,  # missing whitespace after ','
-    E302,  # expected 2 blank lines
-    F541   # f-string missing placeholders
-
+    W291,
+    W292,
+    E203,
+    E231,
+    E302,
+    F541
 
 exclude =
     __pycache__,
