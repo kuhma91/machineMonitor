@@ -17,9 +17,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: sync requirements
-        run: python __init__.py
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
