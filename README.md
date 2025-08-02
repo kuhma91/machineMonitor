@@ -125,11 +125,10 @@ machineMonitor/
 │   └── logs/*.json    <- uuid du log
 │
 ├── library/
-│   └── general/
-│       ├── infoLib.py
-│       ├── sqlLib.py
-│       ├── stringLib.py
-│       └── uiLib.py
+│   ├── infoLib.py
+│   ├── sqlLib.py
+│   ├── stringLib.py
+│   └── uiLib.py
 │
 ├── logger/
 │   ├── core.py
