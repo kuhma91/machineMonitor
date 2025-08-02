@@ -637,7 +637,7 @@ requests.get("http://localhost:8000/machines")
 
 ---
 
-### 5. CI CD
+### 5. CI/CD
 
 #### Contexte et objectifs
 
@@ -648,7 +648,7 @@ Pour garantir la qualité, la stabilité et la fiabilité du code, ce projet int
 Le pipeline CI est défini dans le répertoire `.github/workflows/python-ci.yml` et s’exécute automatiquement sur chaque :
 
 - **push** vers la branche `main`
-- **pull\_request** ciblant `main`
+- **pull_request** ciblant `main`
 
 Cela assure une revue automatisée avant toute fusion ou déploiement.
 
