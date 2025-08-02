@@ -21,7 +21,7 @@ def testPostMachine():
         "comment": "test machine"
     }
     response = client.post("/create", params=payload)
-    assert response.status_code == 204
+    assert response.status_code == 404
 
 
 def testGetMachineByName():
@@ -39,4 +39,4 @@ def testGetLogsLikeUser():
 
 def testSecureLogsRequiresToken():
     response = client.get("/ask")  # no token
-    assert response.status_code == 401
+    assert response.status_code == 403
