@@ -12,8 +12,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run requirement.py
-        run: python requirements.py
+      - name: Sync Requirements.py
+        run: python root/syncRequirements.py
 
       - name: Set up Python
         uses: actions/setup-python@v4
