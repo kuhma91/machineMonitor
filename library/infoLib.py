@@ -14,13 +14,15 @@ import sys
 import site
 import importlib.util
 import sysconfig
+import pprint
 
 # ==== third ==== #
 
 # ==== local ===== #
 
 # ==== global ==== #
-REQUIREMENTS_FILE = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'requirements.txt')
+PACKAGE_PATH = os.sep.join(__file__.split(os.sep)[:-2])
+NEEDED = ['uvicorn', 'flake8', 'pytest', 'httpx']
 COLORS = {
     "blue": (66, 133, 244),
     "red": (234, 67, 53),
@@ -184,15 +186,28 @@ def getFileRecursively(folder, extensions=None, toSkip=None):
     return content
 
 
-def getRequirements():
+def getRequirements(skipPrint=False):
     """
     Reads the project's requirements.txt file and returns a list of required packages.
 
     :return: package names specified in the requirements file.
     :rtype: list
     """
-    if not os.path.exists(REQUIREMENTS_FILE):
-        return []
+    content = getFileRecursively(PACKAGE_PATH, extensions=['.py'])
 
-    with open(REQUIREMENTS_FILE, 'r', encoding='utf8') as f:
-        return [x.strip() for x in f.readlines()]
+    imports = NEEDED
+    projectRoot = os.path.split(PACKAGE_PATH)[0]
+    for f in content:
+        importData = getImportsFromFile(f, projectRoot)
+        imports.extend(importData.get('third', []))
+
+    requirements = list(set(imports))
+
+    if not skipPrint:
+        for imp in requirements:
+            print(imp)
+
+    return requirements
+
+
+getRequirements()

@@ -1,7 +1,7 @@
-PySide2
-uvicorn
-flake8
-pydantic
-httpx
 pytest
+uvicorn
 fastapi
+pydantic
+PySide2
+flake8
+httpx
