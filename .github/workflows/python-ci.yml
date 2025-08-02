@@ -12,8 +12,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Run root requirement.py
-        run: python .github/workflows/requirements.py
+      - name: Run requirement.py
+        run: python machineMonitor/requirements.py
 
       - name: Set up Python
         uses: actions/setup-python@v4
