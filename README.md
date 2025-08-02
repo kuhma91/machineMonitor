@@ -713,6 +713,8 @@ DB_PATH=machineMonitor.db
 LOG_LEVEL=INFO
 ```
 
+Copiez ce fichier en .env pour personnaliser les paramètres
+
 ---
 
 ####  Documentation OpenAPI / Swagger UI
@@ -783,3 +785,4 @@ logging.basicConfig(level=logging.INFO,
 
 Clés primaires (`name`, `uuid`), relations indirectes, typage strict.
 Base synchronisée automatiquement depuis les fichiers JSON.
+
