@@ -680,6 +680,74 @@ Pour afficher l’état du build en temps réel, ajoutez en haut du README :
 
 *(N’oubliez pas d’ajouter l’entrée **`4.5 CI/CD`** dans le sommaire.)*
 
+
+
+####  Getting Started / Run Locally
+
+```bash
+git clone https://github.com/kuhma91/machineMonitor.git
+cd machineMonitor
+pip install -r requirements.txt
+uvicorn machineMonitor.api.main:app --reload
+python -m machineMonitor.logger.main
+```
+
+*(Indiquez ce bloc sous un titre « Getting Started » pour guider un nouveau contributeur.)*
+
+---
+
+####  Dockerfile minimal
+
+Créez à la racine un fichier `Dockerfile` contenant :
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+CMD ["uvicorn","machineMonitor.api.main:app","--host","0.0.0.0","--port","8000"]
+```
+
+*(Permet de lancer l’API dans un conteneur Docker en une seule commande.)*
+
+---
+
+####  Exemple de configuration (`.env.example`)
+
+```env
+DB_PATH=machineMonitor.db
+LOG_LEVEL=INFO
+```
+
+*(Expliquez qu’il faut copier en **`.env`** pour personnaliser les paramètres locaux.)*
+
+---
+
+####  Documentation OpenAPI / Swagger UI
+
+Une fois le serveur lancé, consultez la doc interactive à :
+
+```
+http://localhost:8000/docs
+```
+
+*(Ajoutez ce lien sous la section API pour montrer la documentation auto-générée.)*
+
+---
+
+####  Logging basique
+
+Exemple d’ajout dans `main.py` ou un module de config :
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")
+```
+
+*(Permet de tracer les erreurs et requêtes en prod.)*
+
+
 ---
 
 ### 6. Glossaire et annexes
