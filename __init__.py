@@ -7,11 +7,11 @@ from machineMonitor.library.general.infoLib import REQUIREMENTS_FILE
 
 PROJECT_ROOT = os.sep.join(__file__.split(os.sep)[:-2])
 BASE_REPO = os.path.split(__file__)[0]
+GIT_WORKFLOW = os.path.join(BASE_REPO, '.github', 'workflows', 'python-ci.yml')
 NEEDED = ['uvicorn', 'flake8']
 
 
-
-if __name__ == '__main__':
+def updateRequirements():
     content = getFileRecursively(BASE_REPO, extensions=['.py'])
 
     imports = NEEDED
@@ -26,3 +26,17 @@ if __name__ == '__main__':
         with open(REQUIREMENTS_FILE, 'w', encoding='utf-8') as f:
             f.writelines('\n'.join(needed))
             print(f'requirement updated')
+
+
+def setGitEnv():
+    folder = os.path.split(GIT_WORKFLOW)[0]
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+        print(f'created : {folder}')
+
+    if not os.path.exists(GIT_WORKFLOW):
+
+
+if __name__ == '__main__':
+    updateRequirements()
+    setGitEnv()

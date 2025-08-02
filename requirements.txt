@@ -1,4 +1,5 @@
 uvicorn
 PySide2
-fastapi
 pydantic
+flake8
+fastapi
