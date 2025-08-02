@@ -64,12 +64,12 @@ def deleteLogs(logUuid):
     """
     relatedFile = os.path.join(LOGS_REPO, f'{logUuid}.json')
     if not os.path.exists(relatedFile):
-        print(f'not found : {relatedFile}')
+        print(f'not found: {relatedFile}')
         return None
 
     try:
         os.remove(relatedFile)
-        print(f'deleted : {relatedFile}')
+        print(f'deleted: {relatedFile}')
         return None
 
     except Exception as e:
@@ -264,7 +264,7 @@ def saveData(data, mode='save', logUuid=None):
             filePath = os.path.join(LOGS_REPO, '.temp', 'error', userName, f'{timeStamp}.txt')
 
         else:
-            print(f'unknown mode : {mode}')
+            print(f'unknown mode: {mode}')
             return None
 
     else:
@@ -277,7 +277,7 @@ def saveData(data, mode='save', logUuid=None):
     folder = os.path.split(filePath)[0]
     if not os.path.exists(folder):
         os.makedirs(folder)
-        print(f'created : {folder}')
+        print(f'created: {folder}')
 
     try:
         with open(filePath, 'w', encoding='utf-8') as f:
@@ -285,13 +285,13 @@ def saveData(data, mode='save', logUuid=None):
                 json.dump(data, f)
 
             elif filePath.endswith('.txt'):
-                f.write('\n'.join([f'- {k} : {v}' for k, v in data.items()]))
+                f.write('\n'.join([f'- {k}: {v}' for k, v in data.items()]))
 
-            print(f'{mode} as : {filePath}')
+            print(f'{mode} as: {filePath}')
             return None
 
     except Exception as e:
-        print(f'error while saving : {e}')
+        print(f'error while saving: {e}')
         return e
 
 

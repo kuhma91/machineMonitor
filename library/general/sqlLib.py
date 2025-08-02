@@ -56,7 +56,7 @@ def getAllColumns(dbPath, tableName):
     :rtype: list[str]
     """
     if not isTableExists(dbPath, tableName):
-        print(f'{tableName} not found in : {dbPath}')
+        print(f'{tableName} not found in: {dbPath}')
         return []
 
     with sqlite3.connect(dbPath) as conn:
@@ -80,7 +80,7 @@ def getAllRows(dbPath, tableName):
     :rtype: list[dict]
     """
     if not isTableExists(dbPath, tableName):
-        print(f'{tableName} not found in : {dbPath}')
+        print(f'{tableName} not found in: {dbPath}')
         return []
 
     # Open a connection to the database and ensure it’s closed automatically
@@ -110,12 +110,12 @@ def getPrimaryColumn (dbPath, tableName):
     """
     sqlInfo = getRelatedSQLInfo(dbPath, tableName)
     if not sqlInfo:
-        print(f'{tableName} not found in : {dbPath}')
+        print(f'{tableName} not found in: {dbPath}')
         return None
 
     primaryKeyValues = [x[1] for x in sqlInfo if x[-1] == 1]  # get primary key column name
     if not primaryKeyValues:
-        print(f'not PK found in : {dbPath} -> {tableName}')
+        print(f'not PK found in: {dbPath} -> {tableName}')
         return None
 
     return min(primaryKeyValues)
@@ -135,7 +135,7 @@ def getRelatedSQLInfo(dbPath, tableName):
     :rtype: list of tuple
     """
     if not isTableExists(dbPath, tableName):
-        print(f'{tableName} not found in : {dbPath}')
+        print(f'{tableName} not found in: {dbPath}')
         return {}
 
     with sqlite3.connect(dbPath) as conn:  # connect to SQL DB
@@ -163,7 +163,7 @@ def getRowAsDict(dbPath, tableName, primaryKey):
 
         primaryColumn = getPrimaryColumn(dbPath, tableName)
         if not primaryColumn:
-            print(f'no primaryColumn found in : {dbPath} -> {tableName}')
+            print(f'no primaryColumn found in: {dbPath} -> {tableName}')
             return {}
 
         cursor.execute(f"SELECT * FROM {tableName} WHERE {primaryColumn} = ?;", (primaryKey,))  # get row which primary key matches given primary key
@@ -221,7 +221,7 @@ def isTableExists(dbPath, tableName):
     Check whether a table exists in the SQLite database file.
 
     :param dbPath: Path to the SQLite database file.
-    :type dbPath : str
+    :type dbPath: str
     :param tableName: Name of the table to check.
     :type tableName: str
 
@@ -268,7 +268,7 @@ def deleteLine(dbPath, tableName, primKey):
     try:
         cursor.execute(f"DELETE FROM {tableName} WHERE {primColumn} = ?;", (primKey,))
         conn.commit()
-        print(f'deleted : {primKey}')
+        print(f'deleted: {primKey}')
 
     except Exception as e:
         conn.rollback()
@@ -303,7 +303,7 @@ def createLine(dbPath, tableName, data):
     existingPrimaryKeys = {r[primaryColumn]: r for r in existingRows}
     primaryKey = data[primaryColumn]
     if primaryKey in existingPrimaryKeys:
-        raise ValueError(f"{primaryKey} even exists in : {dbPath} -> {tableName}")
+        raise ValueError(f"{primaryKey} even exists in: {dbPath} -> {tableName}")
 
     # Build the INSERT statement
     columns = ", ".join(data.keys())
@@ -321,7 +321,7 @@ def createLine(dbPath, tableName, data):
     except Exception as e:
         # Roll back on error
         conn.rollback()
-        raise ValueError(f"Failed to add {primaryKey} in : {tableName} -> {e}") from e
+        raise ValueError(f"Failed to add {primaryKey} in: {tableName} -> {e}") from e
 
     finally:
         conn.close()

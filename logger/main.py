@@ -144,13 +144,13 @@ class Logger:
 
         result = saveData(data, mode='temp' if not machine else 'save', logUuid=None if not machine else self.logUuid)
         if result:
-            choice = confirmDialog(message=f'fail while saving data : {result} ! do you want to backup ?')
+            choice = confirmDialog(message=f'fail while saving data: {result} ! do you want to backup ?')
             if not choice:
                 return
 
             result = saveData(data, mode='backup')
             if result:
-                print(f'fail to backup : {result}')
+                print(f'fail to backup: {result}')
 
         if self.fromTemp:
             os.remove(self.fromTemp)
@@ -221,7 +221,7 @@ class LogViewer:
 
             value = deleteLogs(logUuid)
             if not value:
-                print(f'error deleting : {logUuid} -> {value}')
+                print(f'error deleting: {logUuid} -> {value}')
                 return
 
         else:
@@ -232,7 +232,7 @@ class LogViewer:
     def onCellSelected(self, *args):
         selected = self.getUuiFromTableSelection()
         for name, button in self.uiMenus.get('sideButtons', {}).items():
-            button.setToolTip(f'{name} : {selected}')
+            button.setToolTip(f'{name}: {selected}')
             button.setEnabled(True)
 
     def checkEntry(self):

@@ -101,13 +101,13 @@ def saveData(newValue, relatedData):
     """
     if not os.path.exists(EMPLOYS_FOLDER):
         os.makedirs(EMPLOYS_FOLDER)
-        print(f'created : {EMPLOYS_FOLDER}')
+        print(f'created: {EMPLOYS_FOLDER}')
 
     jsonPath = os.path.join(EMPLOYS_FOLDER, f'{newValue}.json')
     try:
         with open(jsonPath, 'w', encoding='utf-8') as f:
             json.dump(relatedData, f)
-            print(f'saved : {newValue}')
+            print(f'saved: {newValue}')
 
     except Exception as e:
-        print(f'fail to save : {newValue} -> {e}')
+        print(f'fail to save: {newValue} -> {e}')

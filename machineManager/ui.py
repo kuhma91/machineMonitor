@@ -42,7 +42,7 @@ class MachineManagerUi(QtWidgets.QDialog):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         nameLayout = QtWidgets.QHBoxLayout()
-        label = QtWidgets.QLabel('machine name : ')
+        label = QtWidgets.QLabel('machine name: ')
         label.setMinimumSize(self.uiWidth // 4, 20)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         nameLayout.addWidget(label)
@@ -85,7 +85,7 @@ class MachineManagerUi(QtWidgets.QDialog):
         self.infoLayout = QtWidgets.QVBoxLayout()
         for name, defaultValue in NEEDED_INFOS.items():
             layout = QtWidgets.QHBoxLayout()
-            label = QtWidgets.QLabel(f'{name} : ')
+            label = QtWidgets.QLabel(f'{name}: ')
             label.setMinimumSize(self.uiWidth // 3, 20)
             label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             layout.addWidget(label)

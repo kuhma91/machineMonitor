@@ -26,7 +26,7 @@ BOOLEAN_CONVERTER = {True: ['oui', 'o', 'yes', 'y', 'true'], False: ['non', 'n',
 MATCHING_TYPES = {'TEXT': str, 'BOOLEAN': bool, 'INTEGER': int}
 
 
-# DLL : Data Definition Language
+# DLL: Data Definition Language
 DLL = '''
 CREATE TABLE IF NOT EXISTS machines (
     name TEXT PRIMARY KEY,
@@ -102,13 +102,13 @@ def publishFromLocal():
                     if not required:
                         continue
 
-                    raise ValueError(f'missing {columnName} in : {filePath}')
+                    raise ValueError(f'missing {columnName} in: {filePath}')
 
                 # Conversion from data type
                 if columnType == 'BOOLEAN':
                     booleanValue = [k for k, v in BOOLEAN_CONVERTER.items() if raw.lower() in v]
                     if not booleanValue:
-                        raise ValueError(f"can't convert : {raw} as boolean")
+                        raise ValueError(f"can't convert: {raw} as boolean")
 
                     toSync[columnName] = booleanValue[0]
 

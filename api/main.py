@@ -4,7 +4,7 @@ fileName: main.py
 scripter: angiu
 creation date: 29/07/2025
 description:
-    - connexion : uvicorn machineMonitor.api.main:app --reload
+    - connexion: uvicorn machineMonitor.api.main:app --reload
 ===============================================================================
 """
 # ==== native ==== #
@@ -54,7 +54,7 @@ def createRecord(request: Request):
 
     tableType = data.get('tableType')
     if not tableType:
-        raise HTTPException(status_code=422, detail='missing value : "tableType"')
+        raise HTTPException(status_code=422, detail='missing value: "tableType"')
 
     model = MATCHING_OUT_TYPES.get(tableType)
     if not model:
@@ -90,11 +90,11 @@ def deleteRecord(request: Request):
 
     tableType = data.get('tableType')
     if not tableType:
-        raise HTTPException(status_code=422, detail='missing : tableType')
+        raise HTTPException(status_code=422, detail='missing: tableType')
 
     primaryColumn = getPrimaryColumn(DB_PATH, tableType)
     if not primaryColumn:
-        raise HTTPException(status_code=422, detail=f'no primary column found for : {tableType}')
+        raise HTTPException(status_code=422, detail=f'no primary column found for: {tableType}')
 
     pk = data.get(primaryColumn)
     if not pk:
@@ -158,11 +158,11 @@ def updateRecord(request: Request):
 
     tableType = data.get('tableType')
     if not tableType:
-        raise HTTPException(status_code=422, detail='missing : tableType')
+        raise HTTPException(status_code=422, detail='missing: tableType')
 
     primaryColumn = getPrimaryColumn(DB_PATH, tableType)
     if not primaryColumn:
-        raise HTTPException(status_code=422, detail=f'no primary column found for : {tableType}')
+        raise HTTPException(status_code=422, detail=f'no primary column found for: {tableType}')
 
     pk = data.get(primaryColumn)
     if not pk:

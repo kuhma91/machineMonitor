@@ -61,7 +61,7 @@ class TokenManagerUi(QtWidgets.QDialog):
         self.userContainer.setContentsMargins(0, 0, 0, 0)
         layout = QtWidgets.QHBoxLayout(self.userContainer)
         layout.setContentsMargins(0, 0, 0, 0)
-        label = QtWidgets.QLabel('user : ')
+        label = QtWidgets.QLabel('user: ')
         label.setMinimumSize(self.uiWidth // 4, 25)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(label)
@@ -88,7 +88,7 @@ class TokenManagerUi(QtWidgets.QDialog):
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        label = QtWidgets.QLabel('authorisation : ')
+        label = QtWidgets.QLabel('authorisation: ')
         label.setMinimumSize(self.uiWidth // 4, 25)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(label)
@@ -103,7 +103,7 @@ class TokenManagerUi(QtWidgets.QDialog):
 
         for i, name in enumerate(['trigram', 'token']):
             layout = QtWidgets.QHBoxLayout()
-            label = QtWidgets.QLabel(f'{name} : ')
+            label = QtWidgets.QLabel(f'{name}: ')
             label.setMinimumSize(self.uiWidth // 4, 25)
             label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             layout.addWidget(label)

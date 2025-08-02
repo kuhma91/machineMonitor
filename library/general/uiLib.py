@@ -179,7 +179,7 @@ def loadUi(mainModule, className, asDialog=False):
 
     toLaunch = getattr(uiModule, f'{className}Ui', None)
     if toLaunch is None:
-        print(f'not found : {className}Ui')
+        print(f'not found: {className}Ui')
         return
 
     if not QtWidgets.QApplication.instance():
@@ -193,7 +193,7 @@ def loadUi(mainModule, className, asDialog=False):
         else:
             uiInstance = toLaunch()
     except Exception as e:
-        print(f"Error while instancing : {e}")
+        print(f"Error while instancing: {e}")
         raise
 
     return uiInstance

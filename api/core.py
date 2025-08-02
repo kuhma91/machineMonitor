@@ -13,12 +13,10 @@ from datetime import datetime
 
 # ==== third ==== #
 from fastapi import Depends
-from fastapi import Request
 from fastapi.security import HTTPBearer
 from fastapi.security import HTTPAuthorizationCredentials
 
 # ==== local ===== #
-
 from machineMonitor.api.models import Machine
 from machineMonitor.api.models import MachineIn
 from machineMonitor.api.models import Log
@@ -155,14 +153,14 @@ def getInfo(dataType, filters):
     # check dataType
     primaryColumn = getPrimaryColumn(DB_PATH, dataType)
     if not primaryColumn:
-        raise ValueError(f'no primeKey found in : {DB_PATH} -> {dataType}')
+        raise ValueError(f'no primeKey found in: {DB_PATH} -> {dataType}')
 
     dataTypes = getTableFromDb(DB_PATH)
     if not dataTypes:
-        raise ValueError(f'no data types found in : {DB_PATH}')
+        raise ValueError(f'no data types found in: {DB_PATH}')
 
     if dataType not in dataTypes:
-        raise ValueError(f'{dataType} not in : {DB_PATH}')
+        raise ValueError(f'{dataType} not in: {DB_PATH}')
 
     # check if enough info given to get result
     rows = getAllRows(DB_PATH, dataType)

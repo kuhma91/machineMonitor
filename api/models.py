@@ -24,8 +24,8 @@ class Machine(BaseModel):
     name: str
     sector: str
     serial_number: str
-    manufacturer : str
-    usage : str
+    manufacturer: str
+    usage: str
     year_of_acquisition: int
     in_service: bool
     comment: str | None = None
@@ -46,16 +46,16 @@ class Employ(BaseModel):
     token: str
     first_name: str
     last_name: str
-    trigram : str
-    authorisation : str
+    trigram: str
+    authorisation: str
 
 
 class MachineIn(BaseModel):
     name: str
     sector: str
     serial_number: str
-    manufacturer : str
-    usage : str
+    manufacturer: str
+    usage: str
     year_of_acquisition: int
     in_service: bool
     comment: Optional[str] = None
@@ -72,5 +72,5 @@ class EmployIn(BaseModel):
     token: str
     first_name: str
     last_name: str
-    trigram : str
-    authorisation : str
+    trigram: str
+    authorisation: str

@@ -38,13 +38,13 @@ def addEntry(name, data):
     """
     if not os.path.exists(MACHINE_FOLDER):
         os.makedirs(MACHINE_FOLDER)
-        print(f'created folder : {MACHINE_FOLDER}')
+        print(f'created folder: {MACHINE_FOLDER}')
 
     jsonFile = os.path.join(MACHINE_FOLDER, f'{name}.json')
 
     with open(jsonFile, 'w', encoding='utf-8') as f:
         json.dump(data, f)
-        print(f'add archive : {jsonFile}')
+        print(f'add archive: {jsonFile}')
 
 
 def deleteEntry(name):
@@ -57,7 +57,7 @@ def deleteEntry(name):
     jsonFile = os.path.join(MACHINE_FOLDER, f'{name}.json')
 
     os.remove(jsonFile)
-    print(f'deleted archive : {jsonFile}')
+    print(f'deleted archive: {jsonFile}')
 
 
 def getMachineData(machineName=None):

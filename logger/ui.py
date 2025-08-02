@@ -45,7 +45,7 @@ class LoggerUi(QtWidgets.QDialog):
         self.mainLayout = QtWidgets.QVBoxLayout(self)
 
         layout = QtWidgets.QHBoxLayout()
-        label = QtWidgets.QLabel('machine name : ')
+        label = QtWidgets.QLabel('machine name: ')
         label.setMinimumSize(self.uiWidth // 4, 20)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(label)
@@ -81,7 +81,7 @@ class LoggerUi(QtWidgets.QDialog):
         self.mainLayout.addItem(spacer)
 
         layout = QtWidgets.QHBoxLayout()
-        label = QtWidgets.QLabel('log type : ')
+        label = QtWidgets.QLabel('log type: ')
         label.setMinimumSize(self.uiWidth // 4, 20)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(label)
@@ -94,7 +94,7 @@ class LoggerUi(QtWidgets.QDialog):
         self.mainLayout.addLayout(layout)
 
         layout = QtWidgets.QHBoxLayout()
-        label = QtWidgets.QLabel('project Id : ')
+        label = QtWidgets.QLabel('project Id: ')
         label.setMinimumSize(self.uiWidth // 4, 20)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         layout.addWidget(label)

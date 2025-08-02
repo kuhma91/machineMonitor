@@ -27,7 +27,7 @@ def updateRequirements():
 
     with open(REQUIREMENTS_FILE, 'w', encoding='utf-8') as f:
         f.writelines('\n'.join(needed))
-        print(f'requirement updated')
+        print('requirement updated')
 
 
 def setGitEnv():
@@ -36,8 +36,7 @@ def setGitEnv():
         return
 
     os.makedirs(folder)
-    print(f'created : {folder}')
-
+    print(f'created: {folder}')
 
 
 if __name__ == '__main__':
