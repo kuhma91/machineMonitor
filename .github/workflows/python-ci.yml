@@ -13,9 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Sync Requirements.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: python .github/workflows/syncRequirements.py
+        run: python __init__.py
 
       - name: Set up Python
         uses: actions/setup-python@v4
