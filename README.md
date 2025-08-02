@@ -678,8 +678,6 @@ Pour afficher l’état du build en temps réel, ajoutez en haut du README :
 ![CI](https://github.com/kuhma91/machineMonitor/actions/workflows/python-ci.yml/badge.svg)
 ```
 
-*(N’oubliez pas d’ajouter l’entrée **`4.5 CI/CD`** dans le sommaire.)*
-
 
 
 ####  Getting Started / Run Locally
@@ -714,8 +712,6 @@ CMD ["uvicorn","machineMonitor.api.main:app","--host","0.0.0.0","--port","8000"]
 DB_PATH=machineMonitor.db
 LOG_LEVEL=INFO
 ```
-
-*(Expliquez qu’il faut copier en **`.env`** pour personnaliser les paramètres locaux.)*
 
 ---
 
