@@ -656,17 +656,6 @@ requests.get("http://localhost:8000/machines")
 
 ---
 
-#### Annexes techniques
-
-- `logger_cahier_des_charges.md` : cahier des charges initial du module Logger.
-- Notes de formation SQL/API : disponibles dans `/data/notes/`
-  - `1 - Modelisation Sql.pdf`
-  - `2 - Sql Commandes.pdf`
-  - `5 - Api Fastapi.pdf`
-  - `8 - Filtres Dynamiques.pdf`, etc.
-
----
-
 #### Références croisées internes
 
 - Les noms des machines doivent correspondre aux fichiers dans `/data/machines/`
