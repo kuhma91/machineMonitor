@@ -39,4 +39,4 @@ def testGetLogsLikeUser():
 
 def testSecureLogsRequiresToken():
     response = client.get("/ask")  # no token
-    assert response.status_code == 403
+    assert response.status_code == 401
