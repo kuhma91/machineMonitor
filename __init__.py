@@ -29,5 +29,4 @@ def syncRequirements():
         print(f'requirement updated : {REQUIREMENTS_FILE}')
 
 
-if __name__ == '__main__':
-    syncRequirements()
+syncRequirements()
