@@ -14,7 +14,6 @@ import sys
 import site
 import importlib.util
 import sysconfig
-import pprint
 
 # ==== third ==== #
 
