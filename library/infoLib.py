@@ -208,6 +208,3 @@ def getRequirements(skipPrint=False):
             print(imp)
 
     return requirements
-
-
-getRequirements()
