@@ -23,12 +23,12 @@ from machineMonitor.api.models import Log
 from machineMonitor.api.models import LogIn
 from machineMonitor.api.models import Employ
 from machineMonitor.api.models import EmployIn
-from machineMonitor.library.general.sqlLib import getPrimaryColumn
-from machineMonitor.library.general.sqlLib import getTableFromDb
-from machineMonitor.library.general.sqlLib import getRowAsDict
-from machineMonitor.library.general.sqlLib import getAllRows
-from machineMonitor.library.general.sqlLib import getAllColumns
-from machineMonitor.library.general.infoLib import getUUID
+from machineMonitor.library.sqlLib import getPrimaryColumn
+from machineMonitor.library.sqlLib import getTableFromDb
+from machineMonitor.library.sqlLib import getRowAsDict
+from machineMonitor.library.sqlLib import getAllRows
+from machineMonitor.library.sqlLib import getAllColumns
+from machineMonitor.library.infoLib import getUUID
 
 # ==== global ==== #
 PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])

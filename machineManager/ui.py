@@ -16,8 +16,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtGui import QIcon
 
 # ==== local ===== #
-from machineMonitor.library.general.stringLib import formatString
-from machineMonitor.library.general.infoLib import COLORS
+from machineMonitor.library.stringLib import formatString
 from machineMonitor.machineManager.core import NEEDED_INFOS
 from machineMonitor.machineManager.core import ICON_FOLDER
 from machineMonitor.machineManager.core import BUTTONS

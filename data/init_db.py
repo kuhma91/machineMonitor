@@ -10,8 +10,8 @@ import sqlite3
 import os
 import json
 
-from machineMonitor.library.general.sqlLib import getRelatedSQLInfo
-from machineMonitor.library.general.sqlLib import syncDatabase
+from machineMonitor.library.sqlLib import getRelatedSQLInfo
+from machineMonitor.library.sqlLib import syncDatabase
 
 
 # 1. db based on this module path

@@ -14,10 +14,10 @@ from functools import partial
 from PySide2 import QtWidgets
 
 # ==== local ===== #
-from machineMonitor.library.general.uiLib import applyStyleSheet
-from machineMonitor.library.general.uiLib import loadUi
-from machineMonitor.library.general.uiLib import confirmDialog
-from machineMonitor.library.general.infoLib import COLORS
+from machineMonitor.library.uiLib import applyStyleSheet
+from machineMonitor.library.uiLib import loadUi
+from machineMonitor.library.uiLib import confirmDialog
+from machineMonitor.library.infoLib import COLORS
 from machineMonitor.machineManager.core import getMachineData
 from machineMonitor.machineManager.core import addEntry
 from machineMonitor.machineManager.core import deleteEntry

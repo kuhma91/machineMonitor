@@ -16,8 +16,8 @@ from datetime import timedelta
 # ==== third ==== #
 
 # ==== local ===== #
-from machineMonitor.library.general.infoLib import COLORS
-from machineMonitor.library.general.infoLib import getUUID
+from machineMonitor.library.infoLib import COLORS
+from machineMonitor.library.infoLib import getUUID
 
 # ==== global ==== #
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])

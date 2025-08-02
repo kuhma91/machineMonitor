@@ -8,8 +8,6 @@ description:
 ===============================================================================
 """
 # ==== native ==== #
-import os
-import json
 
 # ==== third ==== #
 from fastapi import FastAPI
@@ -20,12 +18,12 @@ from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
 # ==== local ===== #
-from machineMonitor.library.general.sqlLib import getPrimaryColumn
-from machineMonitor.library.general.sqlLib import getAllRows
-from machineMonitor.library.general.sqlLib import updateLine
-from machineMonitor.library.general.sqlLib import createLine
-from machineMonitor.library.general.sqlLib import deleteLine
-from machineMonitor.library.general.sqlLib import execMultiRequests
+from machineMonitor.library.sqlLib import getPrimaryColumn
+from machineMonitor.library.sqlLib import getAllRows
+from machineMonitor.library.sqlLib import updateLine
+from machineMonitor.library.sqlLib import createLine
+from machineMonitor.library.sqlLib import deleteLine
+from machineMonitor.library.sqlLib import execMultiRequests
 from machineMonitor.api.core import getDataTypesAndColumns
 from machineMonitor.api.core import getUnSerializedValue
 from machineMonitor.api.core import getAllowedNames

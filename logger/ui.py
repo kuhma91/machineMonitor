@@ -17,8 +17,8 @@ from PySide2.QtGui import QIcon
 from PySide2.QtCore import Qt
 
 # ==== local ===== #
-from machineMonitor.library.general.stringLib import formatString
-from machineMonitor.library.general.uiLib import scrollLayout
+from machineMonitor.library.stringLib import formatString
+from machineMonitor.library.uiLib import scrollLayout
 from machineMonitor.logger.core import NO_MACHINE_CMD
 from machineMonitor.logger.core import AUTHORISATIONS
 from machineMonitor.logger.core import ICON_FOLDER

@@ -9,8 +9,6 @@ description:
 # ==== native ==== #
 import os
 import sys
-import json
-from datetime import datetime
 from functools import partial
 
 # ==== third ==== #
@@ -19,11 +17,11 @@ from PySide2.QtGui import QIcon
 from PySide2.QtCore import Qt
 
 # ==== local ===== #
-from machineMonitor.library.general.uiLib import applyStyleSheet
-from machineMonitor.library.general.uiLib import deleteLayout
-from machineMonitor.library.general.uiLib import confirmDialog
-from machineMonitor.library.general.uiLib import loadUi
-from machineMonitor.library.general.uiLib import STYLE_SHEET
+from machineMonitor.library.uiLib import applyStyleSheet
+from machineMonitor.library.uiLib import deleteLayout
+from machineMonitor.library.uiLib import confirmDialog
+from machineMonitor.library.uiLib import loadUi
+from machineMonitor.library.uiLib import STYLE_SHEET
 from machineMonitor.machineManager.core import getMachineData
 from machineMonitor.logger.core import LOG_TYPES
 from machineMonitor.logger.core import getInitInfo

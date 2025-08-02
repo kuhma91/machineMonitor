@@ -8,15 +8,14 @@ description:
 """
 # ==== native ==== #
 import sys
-from copy import deepcopy
 from functools import partial
 
 # ==== third ==== #
 from PySide2 import QtWidgets
 
 # ==== local ===== #
-from machineMonitor.library.general.uiLib import applyStyleSheet
-from machineMonitor.library.general.uiLib import loadUi
+from machineMonitor.library.uiLib import applyStyleSheet
+from machineMonitor.library.uiLib import loadUi
 from machineMonitor.tokenManager.core import AUTHORISATIONS
 from machineMonitor.tokenManager.core import generateToken
 from machineMonitor.tokenManager.core import generateTrigram

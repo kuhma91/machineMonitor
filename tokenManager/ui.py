@@ -15,7 +15,7 @@ from PySide2 import QtCore
 from PySide2.QtGui import QIcon
 
 # ==== local ===== #
-from machineMonitor.library.general.stringLib import formatString
+from machineMonitor.library.stringLib import formatString
 from machineMonitor.tokenManager.core import ICON_FOLDER
 
 # ==== global ==== #
