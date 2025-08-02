@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run requirement.py
-        run: python machineMonitor/requirements.py
+        run: python requirements.py
 
       - name: Set up Python
         uses: actions/setup-python@v4
