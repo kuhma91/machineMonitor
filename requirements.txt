@@ -1,6 +1,7 @@
-pydantic
-uvicorn
-pytest
 PySide2
-fastapi
+uvicorn
 flake8
+pydantic
+httpx
+pytest
+fastapi
