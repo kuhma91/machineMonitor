@@ -692,8 +692,6 @@ uvicorn machineMonitor.api.main:app --reload
 python -m machineMonitor.logger.main
 ```
 
-*(Indiquez ce bloc sous un titre « Getting Started » pour guider un nouveau contributeur.)*
-
 ---
 
 ####  Dockerfile minimal
@@ -707,8 +705,6 @@ COPY . .
 RUN pip install -r requirements.txt
 CMD ["uvicorn","machineMonitor.api.main:app","--host","0.0.0.0","--port","8000"]
 ```
-
-*(Permet de lancer l’API dans un conteneur Docker en une seule commande.)*
 
 ---
 
@@ -731,8 +727,6 @@ Une fois le serveur lancé, consultez la doc interactive à :
 http://localhost:8000/docs
 ```
 
-*(Ajoutez ce lien sous la section API pour montrer la documentation auto-générée.)*
-
 ---
 
 ####  Logging basique
@@ -744,8 +738,6 @@ import logging
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 ```
-
-*(Permet de tracer les erreurs et requêtes en prod.)*
 
 
 ---
