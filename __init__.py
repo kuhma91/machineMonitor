@@ -22,19 +22,22 @@ def updateRequirements():
     needed = list(set(imports))
     requirements = getRequirements()
 
-    if needed != requirements:
-        with open(REQUIREMENTS_FILE, 'w', encoding='utf-8') as f:
-            f.writelines('\n'.join(needed))
-            print(f'requirement updated')
+    if needed == requirements:
+        return
+
+    with open(REQUIREMENTS_FILE, 'w', encoding='utf-8') as f:
+        f.writelines('\n'.join(needed))
+        print(f'requirement updated')
 
 
 def setGitEnv():
     folder = os.path.split(GIT_WORKFLOW)[0]
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-        print(f'created : {folder}')
+    if os.path.exists(folder):
+        return
 
-    if not os.path.exists(GIT_WORKFLOW):
+    os.makedirs(folder)
+    print(f'created : {folder}')
+
 
 
 if __name__ == '__main__':
