@@ -10,7 +10,7 @@ BASE_REPO = os.path.split(__file__)[0]
 NEEDED = ['uvicorn', 'flake8']
 
 
-def updateRequirements():
+def syncRequirements():
     content = getFileRecursively(BASE_REPO, extensions=['.py'])
 
     imports = NEEDED
@@ -30,4 +30,4 @@ def updateRequirements():
 
 
 if __name__ == '__main__':
-    updateRequirements()
+    syncRequirements()
