@@ -11,7 +11,8 @@
    - [4.2 Machine Manager](#42-machine-manager)
    - [4.3 Logger](#43-logger)
    - [4.4 API (FastAPI)](#44-api-fastapi)
-5. [Glossaire et annexes](#5-glossaire-et-annexes)
+5. [CI/CD](#4-CI-CD)
+6. [Glossaire et annexes](#5-glossaire-et-annexes)
 
 ---
 
@@ -636,7 +637,52 @@ requests.get("http://localhost:8000/machines")
 
 ---
 
-### 5. Glossaire et annexes
+### 5. CI/CD
+
+#### Contexte et objectifs
+
+Pour garantir la qualité, la stabilité et la fiabilité du code, ce projet intègre une **chaîne d’intégration continue** (CI). Elle permet de détecter immédiatement toute régression ou non-conformité dès qu’une modification est poussée.
+
+#### Intégration dans le workflow
+
+Le pipeline CI est défini dans le répertoire `.github/workflows/python-ci.yml` et s’exécute automatiquement sur chaque :
+
+- **push** vers la branche `main`
+- **pull\_request** ciblant `main`
+
+Cela assure une revue automatisée avant toute fusion ou déploiement.
+
+#### Étapes du pipeline
+
+1. **Checkout** du code source (action `actions/checkout@v3`).
+2. **Setup Python 3.11** (action `actions/setup-python@v4`).
+3. **Installation des dépendances** via `pip install -r requirements.txt`.
+4. **Linting** : contrôle de style et règles PEP8 avec `flake8`.
+5. **Tests unitaires** : exécution de la suite `pytest api/test.py`.
+
+À chaque étape, en cas d’erreur (lint ou test), le build échoue et bloque la fusion, garantissant un code toujours conforme.
+
+#### Fichier de configuration
+
+```text
+.github/workflows/python-ci.yml
+```
+
+Contient la définition complète du workflow (triggers, jobs, steps).
+
+#### Badge CI
+
+Pour afficher l’état du build en temps réel, ajoutez en haut du README :
+
+```markdown
+![CI](https://github.com/kuhma91/machineMonitor/actions/workflows/python-ci.yml/badge.svg)
+```
+
+*(N’oubliez pas d’ajouter l’entrée **`4.5 CI/CD`** dans le sommaire.)*
+
+---
+
+### 6. Glossaire et annexes
 
 #### Glossaire
 
