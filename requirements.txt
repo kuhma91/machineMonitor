@@ -1,5 +1,6 @@
-uvicorn
-PySide2
 pydantic
-flake8
+uvicorn
+pytest
+PySide2
 fastapi
+flake8

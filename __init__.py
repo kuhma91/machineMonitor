@@ -7,7 +7,7 @@ from machineMonitor.library.infoLib import REQUIREMENTS_FILE
 
 PROJECT_ROOT = os.sep.join(__file__.split(os.sep)[:-2])
 BASE_REPO = os.path.split(__file__)[0]
-NEEDED = ['uvicorn', 'flake8']
+NEEDED = ['uvicorn', 'flake8', 'pytest']
 
 
 def syncRequirements():
@@ -26,7 +26,7 @@ def syncRequirements():
 
     with open(REQUIREMENTS_FILE, 'w', encoding='utf-8') as f:
         f.writelines('\n'.join(needed))
-        print(f'requirement updated : {REQUIREMENTS_FILE}')
+        print('requirement updated : {0} : \n{1}'.format(REQUIREMENTS_FILE, "\n".join(needed)))
 
 
 syncRequirements()

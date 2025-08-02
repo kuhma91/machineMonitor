@@ -20,7 +20,7 @@ import sysconfig
 # ==== local ===== #
 
 # ==== global ==== #
-REQUIREMENTS_FILE = os.path.join(os.sep.join(__file__.split(os.sep)[:-3]), 'requirements.txt')
+REQUIREMENTS_FILE = os.path.join(os.sep.join(__file__.split(os.sep)[:-2]), 'requirements.txt')
 COLORS = {
     "blue": (66, 133, 244),
     "red": (234, 67, 53),
