@@ -11,7 +11,7 @@
    - [4.2 Machine Manager](#42-machine-manager)
    - [4.3 Logger](#43-logger)
    - [4.4 API (FastAPI)](#44-api-fastapi)
-5. [CI/CD](#4-CI-CD)
+5. [CI CD](#4-CI-CD)
 6. [Glossaire et annexes](#5-glossaire-et-annexes)
 
 ---
@@ -637,7 +637,7 @@ requests.get("http://localhost:8000/machines")
 
 ---
 
-### 5. CI/CD
+### 5. CI CD
 
 #### Contexte et objectifs
 
