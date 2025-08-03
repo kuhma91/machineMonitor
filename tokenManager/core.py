@@ -15,13 +15,13 @@ import secrets
 # ==== third ==== #
 
 # ==== local ===== #
+from machineMonitor.library.infoLib import AUTHORISATIONS
 
 # ==== global ==== #
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])
 ICON_FOLDER = os.path.join(BASE_FOLDER, 'icon')
 EMPLOYS_FOLDER = os.path.join(BASE_FOLDER, 'data', 'employs')
 TOKEN_BUTTONS = ['new']
-AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 TOKEN_LENGTH = 32
 
 

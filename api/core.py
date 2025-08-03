@@ -29,13 +29,13 @@ from machineMonitor.library.sqlLib import getRowAsDict
 from machineMonitor.library.sqlLib import getAllRows
 from machineMonitor.library.sqlLib import getAllColumns
 from machineMonitor.library.infoLib import getUUID
+from machineMonitor.library.infoLib import AUTHORISATIONS
 
 # ==== global ==== #
 PACKAGE_REPO = os.sep.join(__file__.split(os.sep)[:-2])
 DB_PATH = os.path.join(PACKAGE_REPO, 'data', 'machineMonitor.db')
 MATCHING_OUT_TYPES = {'machines': Machine, 'logs': Log, 'employs': Employ}
 MATCHING_IN_TYPES = {'machines': MachineIn, 'logs': LogIn, 'employs': EmployIn}
-AUTHORISATIONS = ['operator', 'lead', 'supervisor']
 SQL_KEYS = ['limit', 'offset', 'orderBy', 'descending', 'like', 'iLike']
 security = HTTPBearer()  # get token from URL Authorization header
 

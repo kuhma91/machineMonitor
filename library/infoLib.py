@@ -14,6 +14,7 @@ import sys
 import site
 import importlib.util
 import sysconfig
+import json
 
 # ==== third ==== #
 
@@ -21,6 +22,7 @@ import sysconfig
 
 # ==== global ==== #
 PACKAGE_PATH = os.sep.join(__file__.split(os.sep)[:-2])
+DATA_REPO = os.path.join(PACKAGE_PATH, 'data')
 NEEDED = ['uvicorn', 'flake8', 'pytest', 'httpx']
 COLORS = {
     "blue": (66, 133, 244),
@@ -28,6 +30,61 @@ COLORS = {
     "yellow": (251, 188, 5),
     "green": (52, 168, 83)
 }
+AUTHORISATIONS = {'admin': 3, 'supervisor': 2, 'lead': 1, 'user': 0}
+
+
+def getEmployeesData(employs=None):
+    """
+    Load employee data from the 'employes.csv' file.
+
+    :param employs: employ names or trigrams
+    :type employs: list
+
+    :return: each employee’s trigram to a dict of their fields, or 'user' if the file is missing.
+    :rtype: dict
+    """
+    employeesFolder = os.path.join(DATA_REPO, 'employs')
+    if not os.path.exists(employeesFolder):
+        return {}
+
+    data = {}
+    for item in os.listdir(employeesFolder):
+        if not item.endswith('.json'):
+            continue
+
+        fullName = os.path.splitext(item)[0]
+
+        itemPath = os.path.join(employeesFolder, item)
+        with open(itemPath, 'r', encoding='utf-8') as f:
+            info = json.load(f)
+            trigram = info.pop('trigram')
+            if employs and not [{trigram, fullName} & set(employs)]:
+                continue
+
+            info['fullName'] = fullName
+            data[trigram] = info
+
+    return data
+
+
+def getAuthorisationDegree():
+    """
+    Retrieve the authorization level for the current OS user.
+
+    :return: The authorization level from employees data, or 'user' if the user is not found.
+    :rtype: int
+    """
+    user = os.getlogin().lower()
+    employeesData = getEmployeesData()
+    userData = employeesData.get(user)
+
+    minDegree = min(list(AUTHORISATIONS.values()))
+    if not userData:
+        return minDegree
+
+    authorisation = userData.get('authorisation', 'user')
+
+    return AUTHORISATIONS.get(authorisation)
 
 
 def getUUID(logsRepo=None):

@@ -25,7 +25,7 @@ DATA_REPO = os.path.join(BASE_FOLDER, 'data')
 LOGS_REPO = os.path.join(DATA_REPO, 'logs')
 MACHINE_REPO = os.path.join(DATA_REPO, 'machines')
 ICON_FOLDER = os.path.join(BASE_FOLDER, 'icon')
-AUTHORISATIONS = {'supervisor': ['edit', 'delete'], 'lead': ['edit']}
+AUTHORISATION_MENUS = {2: ['edit', 'delete'], 1: ['edit']}
 LOG_TYPES = ['empty consumable & reload', 'info', 'error']
 R, G, B = COLORS['yellow']
 NO_MACHINE_CMD = (f"QComboBox {{ border: 2px solid rgb({R}, {G}, {B});"
@@ -76,21 +76,6 @@ def deleteLogs(logUuid):
         return e
 
 
-def getAuthorisation():
-    """
-    Retrieve the authorization level for the current OS user.
-
-    :return: The authorization level from employees data, or 'user' if the user is not found.
-    :rtype: str
-    """
-    user = os.getlogin().lower()
-    employeesData = getEmployeesData()
-    if user not in employeesData:
-        return 'user'
-
-    return employeesData.get(user, {}).get('authorisation', 'user')
-
-
 def getDataFromFile(filePath):
     """
     Load data from the given file path, handling JSON and TXT formats.
@@ -130,31 +115,6 @@ def getDataFromUuid(logsUuid):
 
     with open(logsUuid, 'r', encoding='utf-8') as f:
         return json.load(f)
-
-
-def getEmployeesData():
-    """
-    Load employee data from the 'employes.csv' file.
-
-    :return: each employee’s trigram to a dict of their fields, or 'user' if the file is missing.
-    :rtype: dict
-    """
-    data = {}
-
-    employsFile = os.path.join(DATA_REPO, 'employs', 'employs.json')
-    if not os.path.exists(employsFile):
-        return data
-
-    with open(employsFile, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-
-        result = {}
-        for fullName, info in data.items():
-            info['fullName'] = fullName
-            trigram = info.pop('trigram')
-            result[trigram] = info
-
-    return result
 
 
 def getFileData(folder):

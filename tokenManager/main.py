@@ -17,6 +17,7 @@ from PySide2 import QtWidgets
 from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import loadUi
 from machineMonitor.tokenManager.core import AUTHORISATIONS
+from machineMonitor.library.infoLib import getAuthorisationDegree
 from machineMonitor.tokenManager.core import generateToken
 from machineMonitor.tokenManager.core import generateTrigram
 from machineMonitor.tokenManager.core import getUsers
@@ -27,6 +28,12 @@ from machineMonitor.tokenManager.core import saveData
 
 class TokenManager:
     def __init__(self, asDialog=False):
+        userDegree = getAuthorisationDegree()
+        maxDegree = max(list(AUTHORISATIONS.values()))
+        if userDegree < maxDegree:
+            print(f'user degree : {userDegree} need {maxDegree} to use this tool')
+            return
+
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
         self.uiMenus = self.ui.uiMenus

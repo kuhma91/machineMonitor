@@ -19,11 +19,11 @@ from PySide2.QtCore import Qt
 # ==== local ===== #
 from machineMonitor.library.stringLib import formatString
 from machineMonitor.library.uiLib import scrollLayout
+from machineMonitor.library.infoLib import getAuthorisationDegree
+from machineMonitor.logger.core import AUTHORISATION_MENUS
 from machineMonitor.logger.core import NO_MACHINE_CMD
-from machineMonitor.logger.core import AUTHORISATIONS
 from machineMonitor.logger.core import ICON_FOLDER
 from machineMonitor.logger.core import R, G, B
-from machineMonitor.logger.core import getAuthorisation
 
 # ==== global ==== #
 
@@ -225,7 +225,9 @@ class LogViewerUi(QtWidgets.QDialog):
         self.tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         layout.addWidget(self.tableWidget)
 
-        sideButtons = AUTHORISATIONS.get(getAuthorisation(), [])
+        degree = getAuthorisationDegree()
+        key = min(AUTHORISATION_MENUS, key=lambda k: abs(degree - k))
+        sideButtons = AUTHORISATION_MENUS[key]
         if sideButtons:
             sideLayout = QtWidgets.QVBoxLayout()
             for name in sideButtons:

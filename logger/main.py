@@ -34,6 +34,7 @@ from machineMonitor.logger.core import getCompleterData
 from machineMonitor.logger.core import getTableWidgetData
 from machineMonitor.logger.core import deleteLogs
 from machineMonitor.logger.core import getDataFromUuid
+from machineMonitor.library.infoLib import getAuthorisationDegree
 
 # ==== global ==== #
 
@@ -340,7 +341,3 @@ class LogViewer:
             self.ui.exec_()
         else:
             self.ui.show()
-
-
-if __name__ == "__main__":
-    LogViewer()
