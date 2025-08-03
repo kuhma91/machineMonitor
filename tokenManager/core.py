@@ -15,7 +15,6 @@ import secrets
 # ==== third ==== #
 
 # ==== local ===== #
-from machineMonitor.library.infoLib import AUTHORISATIONS
 
 # ==== global ==== #
 BASE_FOLDER = os.sep.join(__file__.split(os.sep)[:-2])

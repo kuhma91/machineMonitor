@@ -34,7 +34,6 @@ from machineMonitor.logger.core import getCompleterData
 from machineMonitor.logger.core import getTableWidgetData
 from machineMonitor.logger.core import deleteLogs
 from machineMonitor.logger.core import getDataFromUuid
-from machineMonitor.library.infoLib import getAuthorisationDegree
 
 # ==== global ==== #
 
