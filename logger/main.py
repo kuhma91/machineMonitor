@@ -12,9 +12,9 @@ import sys
 from functools import partial
 
 # ==== third ==== #
-from PySide2 import QtWidgets
-from PySide2.QtGui import QIcon
-from PySide2.QtCore import Qt
+from PyQt5 import QtWidgets
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
 
 # ==== local ===== #
 from machineMonitor.library.uiLib import applyStyleSheet

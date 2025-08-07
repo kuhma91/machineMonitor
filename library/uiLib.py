@@ -13,8 +13,8 @@ import sys
 import importlib
 
 # ==== third ==== #
-from PySide2.QtCore import Qt
-from PySide2 import QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets
 
 # ==== local ===== #
 

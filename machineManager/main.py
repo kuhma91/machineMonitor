@@ -11,7 +11,7 @@ import sys
 from functools import partial
 
 # ==== third ==== #
-from PySide2 import QtWidgets
+from PyQt5 import QtWidgets
 
 # ==== local ===== #
 from machineMonitor.library.uiLib import applyStyleSheet

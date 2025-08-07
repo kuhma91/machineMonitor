@@ -10,9 +10,9 @@ description:
 import os
 
 # ==== third ==== #
-from PySide2 import QtWidgets
-from PySide2 import QtCore
-from PySide2.QtGui import QIcon
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
+from PyQt5.QtGui import QIcon
 
 # ==== local ===== #
 from machineMonitor.library.stringLib import formatString

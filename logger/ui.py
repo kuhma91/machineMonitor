@@ -10,11 +10,11 @@ description:
 import os
 
 # ==== third ==== #
-from PySide2 import QtWidgets
-from PySide2 import QtCore
-from PySide2.QtCore import QStringListModel
-from PySide2.QtGui import QIcon
-from PySide2.QtCore import Qt
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
+from PyQt5.QtCore import QStringListModel
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
 
 # ==== local ===== #
 from machineMonitor.library.stringLib import formatString
