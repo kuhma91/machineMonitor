@@ -21,6 +21,8 @@ from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import deleteLayout
 from machineMonitor.library.uiLib import confirmDialog
 from machineMonitor.library.uiLib import loadUi
+from machineMonitor.library.uiLib import ensureSingleInstance
+from machineMonitor.library.uiLib import initializeUi
 from machineMonitor.library.uiLib import STYLE_SHEET
 from machineMonitor.machineManager.core import getMachineData
 from machineMonitor.logger.core import LOG_TYPES
@@ -55,7 +57,7 @@ class Logger:
         self.fillUi()
         self.connectWidgets()
         applyStyleSheet(self.ui, excluded=self.uiMenus['excluded'])
-        self.initializeUi()
+        initializeUi(self.ui)
 
     def storeWidget(self):
         self.machineBox = self.ui.machineBox
@@ -155,17 +157,6 @@ class Logger:
 
         self.ui.close()
 
-    def initializeUi(self, *args):
-        if QtWidgets.QApplication.instance() is None:
-                self.app = QtWidgets.QApplication(sys.argv)
-        else:
-            self.app = QtWidgets.QApplication.instance()
-
-        if isinstance(self.ui, QtWidgets.QDialog):
-            self.ui.exec_()
-        else:
-            self.ui.show()
-
 
 class LogViewer:
     def __init__(self, asDialog=False):
@@ -181,7 +172,7 @@ class LogViewer:
         self.fillUi()
         self.connectWidgets()
         applyStyleSheet(self.ui, excluded=self.uiMenus.get('excluded', []))
-        self.initializeUi()
+        initializeUi(self.ui)
 
     def storeWidget(self):
         self.model = self.ui.model
@@ -329,14 +320,3 @@ class LogViewer:
         self.completionList = getCompleterData(excluded=self.uiMenus.get('excluded', []))
         self.model.setStringList([])
         self.model.setStringList([f'{x} [{k}]' for k, v in self.completionList.items() for x in v])
-
-    def initializeUi(self, *args):
-        if QtWidgets.QApplication.instance() is None:
-                self.app = QtWidgets.QApplication(sys.argv)
-        else:
-            self.app = QtWidgets.QApplication.instance()
-
-        if isinstance(self.ui, QtWidgets.QDialog):
-            self.ui.exec_()
-        else:
-            self.ui.show()

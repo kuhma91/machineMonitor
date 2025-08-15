@@ -16,6 +16,8 @@ from PyQt5 import QtWidgets
 # ==== local ===== #
 from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import loadUi
+from machineMonitor.library.uiLib import ensureSingleInstance
+from machineMonitor.library.uiLib import initializeUi
 from machineMonitor.library.uiLib import confirmDialog
 from machineMonitor.library.infoLib import COLORS
 from machineMonitor.machineManager.core import getMachineData
@@ -43,7 +45,7 @@ class MachineManager:
         self.connectWidgets()
         self.fillUi()
         applyStyleSheet(self.ui, excluded=self.exceptions)
-        self.initializeUi()
+        initializeUi(self.ui)
 
     def storeWidget(self):
         self.uiMenus = self.ui.uiMenus
@@ -223,17 +225,6 @@ class MachineManager:
         self.commentButton.setText(text)
         self.commentField.setVisible(self.unfold)
         self.ui.adjustSize()
-
-    def initializeUi(self, *args):
-        if QtWidgets.QApplication.instance() is None:
-            self.app = QtWidgets.QApplication(sys.argv)
-        else:
-            self.app = QtWidgets.QApplication.instance()
-
-        if isinstance(self.ui, QtWidgets.QDialog):
-            self.ui.exec_()
-        else:
-            self.ui.show()
 
 
 if __name__ == "__main__":

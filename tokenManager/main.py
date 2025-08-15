@@ -16,6 +16,8 @@ from PyQt5 import QtWidgets
 # ==== local ===== #
 from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import loadUi
+from machineMonitor.library.uiLib import ensureSingleInstance
+from machineMonitor.library.uiLib import initializeUi
 from machineMonitor.tokenManager.core import AUTHORISATIONS
 from machineMonitor.library.infoLib import getAuthorisationDegree
 from machineMonitor.tokenManager.core import generateToken
@@ -42,7 +44,7 @@ class TokenManager:
         self.fillUi()
         self.connectWidgets()
         applyStyleSheet(self.ui)
-        self.initializeUi()
+        initializeUi(self.ui)
 
     def storeWidget(self):
         self.nameContainer = self.ui.nameContainer
@@ -187,17 +189,6 @@ class TokenManager:
         self.authorisationBox.setEnabled(True)
 
         self.ui.adjustSize()
-
-    def initializeUi(self, *args):
-        if QtWidgets.QApplication.instance() is None:
-            self.app = QtWidgets.QApplication(sys.argv)
-        else:
-            self.app = QtWidgets.QApplication.instance()
-
-        if isinstance(self.ui, QtWidgets.QDialog):
-            self.ui.exec_()
-        else:
-            self.ui.show()
 
 
 if __name__ == "__main__":

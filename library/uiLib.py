@@ -221,3 +221,56 @@ def scrollLayout(parentLayout=None):
         parentLayout.addWidget(scrollArea)
 
     return scrollArea, contentLayout
+
+
+def ensureSingleInstance(widget, key_attr="singleInstanceKey"):
+    """Ensure only one top-level window is open for the given logical key.
+
+    :param widget: Top-level widget/dialog to keep as the sole instance.
+    :type widget: QtWidgets.QWidget
+    :param key_attr: Attribute name on the widget that carries a unique logical key.
+                     Fallback order if missing/empty: objectName() → class name.
+    :type key_attr: str
+    """
+    # Resolve unique key (attr > objectName > class name)
+    key = getattr(widget, key_attr, None) or widget.objectName() or widget.__class__.__name__
+    if not widget.objectName():
+        widget.setObjectName(key)  # Keep a stable objectName for tooling/debug
+
+    # Close any other top-level widget sharing the same key
+    for w in QtWidgets.QApplication.topLevelWidgets():
+        if w is widget:
+            continue
+        try:
+            other_key = getattr(w, key_attr, None) or w.objectName()
+            if other_key == key:
+                w.close()
+        except RuntimeError:
+            pass  # Widget might already be deleted
+
+def initializeUi(widget):
+    """Show the widget and own the Qt event loop when needed (no __main__ required).
+
+    :param widget: Top-level widget/dialog to display (e.g., QMainWindow, QWidget, QDialog).
+    :type widget: QtWidgets.QWidget
+    """
+    # Desktop: get or create QApplication
+    app = QtWidgets.QApplication.instance()
+    created = False
+    if app is None:
+        app = QtWidgets.QApplication([])
+        created = True
+
+    # Show appropriately
+    if isinstance(widget, QtWidgets.QDialog):
+        widget.setModal(True)
+        if created:
+            widget.finished.connect(app.quit)
+            widget.show()
+            app.exec_()
+        else:
+            widget.exec_()
+    else:
+        widget.show()
+        if created:
+            app.exec_()

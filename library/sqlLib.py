@@ -234,7 +234,7 @@ def isTableExists(dbPath, tableName):
         # Verify table exists
         cursor.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?;",  # sqlite_master = intern table that repo all DB objects
-            (tableName, )
+            (tableName)
         )
         return cursor.fetchone() is not None
 

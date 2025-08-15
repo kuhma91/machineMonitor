@@ -17,7 +17,7 @@ import sys
 CASES = ['kebab-case', 'snake_case', 'camelCase', 'Train-Case', 'SCREAMING_SNAKE_CASE', 'PascalCase', 'Casual case']
 
 
-def convertStringToCamelCase(string, ):
+def convertStringToCamelCase(string):
     """
     Convert a string to camelCase.
 
