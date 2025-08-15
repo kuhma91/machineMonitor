@@ -45,7 +45,7 @@ class TokenManager:
         self.fillUi()
         self.connectWidgets()
         applyStyleSheet(self.ui)
-        initializeUi(self.ui)
+        initializeUi(self.ui, singleInstance=True, keyAttr="singleInstanceKey", appCreated=self._appCreated)
 
     def storeWidget(self):
         self.nameContainer = self.ui.nameContainer

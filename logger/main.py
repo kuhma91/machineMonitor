@@ -58,7 +58,7 @@ class Logger:
         self.fillUi()
         self.connectWidgets()
         applyStyleSheet(self.ui, excluded=self.uiMenus['excluded'])
-        initializeUi(self.ui)
+        initializeUi(self.ui, singleInstance=True, keyAttr="singleInstanceKey", appCreated=self._appCreated)
 
     def storeWidget(self):
         self.machineBox = self.ui.machineBox
@@ -174,7 +174,7 @@ class LogViewer:
         self.fillUi()
         self.connectWidgets()
         applyStyleSheet(self.ui, excluded=self.uiMenus.get('excluded', []))
-        initializeUi(self.ui)
+        initializeUi(self.ui, singleInstance=True, keyAttr="singleInstanceKey", appCreated=self._appCreated)
 
     def storeWidget(self):
         self.model = self.ui.model

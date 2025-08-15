@@ -46,7 +46,7 @@ class MachineManager:
         self.connectWidgets()
         self.fillUi()
         applyStyleSheet(self.ui, excluded=self.exceptions)
-        initializeUi(self.ui)
+        initializeUi(self.ui, singleInstance=True, keyAttr="singleInstanceKey", appCreated=self._appCreated)
 
     def storeWidget(self):
         self.uiMenus = self.ui.uiMenus
