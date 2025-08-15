@@ -249,6 +249,19 @@ def ensureSingleInstance(widget, key_attr="singleInstanceKey"):
             pass  # Widget might already be deleted
 
 
+def isMayaEnv():
+    """Detect Autodesk Maya Python environment safely.
+
+    :return: True if running inside Autodesk Maya's Python.
+    :rtype: bool
+    """
+    return any((
+        importlib.util.find_spec("maya.OpenMayaUI") is not None,
+        importlib.util.find_spec("maya.OpenMaya")   is not None,
+        importlib.util.find_spec("maya.cmds")       is not None,
+    ))
+
+
 def initializeUi(widget, singleInstance=True, keyAttr="singleInstanceKey", appCreated=None):
     """Show the widget, enforce single-instance, and manage the Qt event loop.
 
@@ -298,11 +311,13 @@ def initializeUi(widget, singleInstance=True, keyAttr="singleInstanceKey", appCr
         widget.setModal(True)
         if appCreated:
             widget.finished.connect(app.quit)
+            widget.setAttribute(QtWidgets.Qt.WA_DeleteOnClose, True)
             widget.show()
             return app.exec_()
         else:
             return widget.exec_()
     else:
+        widget.setAttribute(QtWidgets.Qt.WA_DeleteOnClose, True)
         widget.show()
         if appCreated:
             return app.exec_()
