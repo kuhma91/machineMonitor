@@ -311,13 +311,13 @@ def initializeUi(widget, singleInstance=True, keyAttr="singleInstanceKey", appCr
         widget.setModal(True)
         if appCreated:
             widget.finished.connect(app.quit)
-            widget.setAttribute(QtWidgets.Qt.WA_DeleteOnClose, True)
+            widget.setAttribute(Qt.WA_DeleteOnClose, True)  # ensure automatic delete on close
             widget.show()
             return app.exec_()
         else:
             return widget.exec_()
     else:
-        widget.setAttribute(QtWidgets.Qt.WA_DeleteOnClose, True)
+        widget.setAttribute(Qt.WA_DeleteOnClose, True)  # ensure automatic delete on close
         widget.show()
         if appCreated:
             return app.exec_()
