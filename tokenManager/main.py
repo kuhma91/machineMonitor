@@ -18,7 +18,7 @@ from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import loadUi
 from machineMonitor.library.uiLib import ensureQtApp
 from machineMonitor.library.uiLib import initializeUi
-from machineMonitor.tokenManager.core import AUTHORISATIONS
+from machineMonitor.library.infoLib import AUTHORISATIONS
 from machineMonitor.library.infoLib import getAuthorisationDegree
 from machineMonitor.tokenManager.core import generateToken
 from machineMonitor.tokenManager.core import generateTrigram
