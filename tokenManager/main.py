@@ -16,7 +16,7 @@ from PyQt5 import QtWidgets
 # ==== local ===== #
 from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import loadUi
-from machineMonitor.library.uiLib import ensureSingleInstance
+from machineMonitor.library.uiLib import ensureQtApp
 from machineMonitor.library.uiLib import initializeUi
 from machineMonitor.tokenManager.core import AUTHORISATIONS
 from machineMonitor.library.infoLib import getAuthorisationDegree
@@ -36,6 +36,7 @@ class TokenManager:
             print(f'user degree : {userDegree} need {maxDegree} to use this tool')
             return
 
+        _, self._appCreated = ensureQtApp()
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
         self.uiMenus = self.ui.uiMenus

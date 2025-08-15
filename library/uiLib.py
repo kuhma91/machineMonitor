@@ -248,29 +248,76 @@ def ensureSingleInstance(widget, key_attr="singleInstanceKey"):
         except RuntimeError:
             pass  # Widget might already be deleted
 
-def initializeUi(widget):
-    """Show the widget and own the Qt event loop when needed (no __main__ required).
 
-    :param widget: Top-level widget/dialog to display (e.g., QMainWindow, QWidget, QDialog).
+def initializeUi(widget, singleInstance=True, keyAttr="singleInstanceKey", appCreated=None):
+    """Show the widget, enforce single-instance, and manage the Qt event loop.
+
+    :param widget: Top-level widget/dialog to display (QMainWindow/QWidget/QDialog).
     :type widget: QtWidgets.QWidget
+    :param singleInstance: If True, close any existing window sharing the same logical key.
+    :type singleInstance: bool
+    :param keyAttr: Attribute name on the widget carrying a unique logical key.
+    :type keyAttr: str
+    :param appCreated: If provided, tells whether the current process created the QApplication
+                       earlier (via ensureQtApp). If None, it will be inferred.
+    :type appCreated: bool | None
+    :return: Exec code if this call started an event loop; otherwise None.
+    :rtype: int | None
     """
-    # Desktop: get or create QApplication
+    if isMayaEnv():
+        from library.maya.windowLib import dockPySide2UI, closeWindow
+        if singleInstance:
+            closeWindow(widget)
+        dockPySide2UI(widget)
+        return None
+
+    app = QtWidgets.QApplication.instance()
+    # If caller didn't tell us, infer whether we created the app here
+    created_here = False
+    if app is None:
+        app = QtWidgets.QApplication(sys.argv)
+        created_here = True
+    if appCreated is None:
+        appCreated = created_here
+
+    if singleInstance:
+        key = getattr(widget, keyAttr, None) or widget.objectName() or widget.__class__.__name__
+        if not widget.objectName():
+            widget.setObjectName(key)
+        for w in QtWidgets.QApplication.topLevelWidgets():
+            if w is widget:
+                continue
+            try:
+                other_key = getattr(w, keyAttr, None) or w.objectName()
+                if other_key == key:
+                    w.close()
+            except RuntimeError:
+                pass
+
+    if isinstance(widget, QtWidgets.QDialog):
+        widget.setModal(True)
+        if appCreated:
+            widget.finished.connect(app.quit)
+            widget.show()
+            return app.exec_()
+        else:
+            return widget.exec_()
+    else:
+        widget.show()
+        if appCreated:
+            return app.exec_()
+        return None
+
+
+def ensureQtApp():
+    """Ensure a QApplication exists *before* any QWidget is constructed.
+
+    :return: (app instance, created flag)
+    :rtype: tuple[QtWidgets.QApplication, bool]
+    """
     app = QtWidgets.QApplication.instance()
     created = False
     if app is None:
-        app = QtWidgets.QApplication([])
+        app = QtWidgets.QApplication(sys.argv)
         created = True
-
-    # Show appropriately
-    if isinstance(widget, QtWidgets.QDialog):
-        widget.setModal(True)
-        if created:
-            widget.finished.connect(app.quit)
-            widget.show()
-            app.exec_()
-        else:
-            widget.exec_()
-    else:
-        widget.show()
-        if created:
-            app.exec_()
+    return app, created

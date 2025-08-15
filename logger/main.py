@@ -21,7 +21,7 @@ from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import deleteLayout
 from machineMonitor.library.uiLib import confirmDialog
 from machineMonitor.library.uiLib import loadUi
-from machineMonitor.library.uiLib import ensureSingleInstance
+from machineMonitor.library.uiLib import ensureQtApp
 from machineMonitor.library.uiLib import initializeUi
 from machineMonitor.library.uiLib import STYLE_SHEET
 from machineMonitor.machineManager.core import getMachineData
@@ -42,6 +42,7 @@ from machineMonitor.logger.core import getDataFromUuid
 
 class Logger:
     def __init__(self, logUuid=None, asDialog=False):
+        _, self._appCreated = ensureQtApp()
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
         self.uiMenus = self.ui.uiMenus
@@ -160,6 +161,7 @@ class Logger:
 
 class LogViewer:
     def __init__(self, asDialog=False):
+        _, self._appCreated = ensureQtApp()
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
         self.uiMenus = self.ui.uiMenus

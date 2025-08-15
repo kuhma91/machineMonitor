@@ -16,7 +16,7 @@ from PyQt5 import QtWidgets
 # ==== local ===== #
 from machineMonitor.library.uiLib import applyStyleSheet
 from machineMonitor.library.uiLib import loadUi
-from machineMonitor.library.uiLib import ensureSingleInstance
+from machineMonitor.library.uiLib import ensureQtApp
 from machineMonitor.library.uiLib import initializeUi
 from machineMonitor.library.uiLib import confirmDialog
 from machineMonitor.library.infoLib import COLORS
@@ -35,6 +35,7 @@ RED = [value for value in COLORS['red']]
 
 class MachineManager:
     def __init__(self, asDialog=False):
+        _, self._appCreated = ensureQtApp()
         self.ui = loadUi(__file__, __class__.__name__, asDialog=asDialog)
 
         self.exceptions = []
